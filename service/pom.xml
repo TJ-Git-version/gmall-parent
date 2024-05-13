@@ -11,6 +11,9 @@
 
     <artifactId>service</artifactId>
     <packaging>pom</packaging>
+    <modules>
+        <module>service-product</module>
+    </modules>
 
     <dependencies>
         <!--依赖服务的工具类-->
