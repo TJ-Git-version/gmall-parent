@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.BaseAttrInfoMapper">
+
+    <!--
+        定义BaseAttrInfo的结果映射
+         1. id: 主键
+         2. attrValueList: 关联的BaseAttrValue列表
+         3. autoMapping自动映射: 属性名和列名相同
+         4. ofType: 指定关联的BaseAttrValue的类型
+         5. property: 指定BaseAttrValue的属性名
+    -->
+    <resultMap id="BaseAttrInfoMap" type="com.atguigu.gmall.model.product.BaseAttrInfo" autoMapping="true">
+        <id property="id" column="id"/> <!-- 主键 -->
+        <collection property="attrValueList" ofType="com.atguigu.gmall.model.product.BaseAttrValue" autoMapping="true">
+            <id property="id" column="bav_id"/> <!-- 主键 -->
+        </collection>
+    </resultMap>
+
+    <!-- 根据分类id查询属性列表 -->
+    <select id="selectAttrInfoList" resultMap="BaseAttrInfoMap">
+        select
+            bai.id,
+            bai.attr_name,
+            bai.category_id,
+            bai.category_level,
+            bav.id bav_id,
+            bav.value_name,
+            bav.attr_id
+        from base_attr_info bai
+                 inner join base_attr_value bav
+                            on bav.attr_id = bai.id
+        <where>
+            <if test="category1Id != null and category1Id != 0">
+                (bai.category_id = #{category1Id} and bai.category_level = 1)
+            </if>
+            <if test="category2Id != null and category2Id != 0">
+                or (bai.category_id = #{category2Id} and bai.category_level = 2)
+            </if>
+            <if test="category3Id != null and category3Id != 0">
+                or (bai.category_id = #{category3Id} and bai.category_level = 3)
+            </if>
+        </where>
+    </select>
+
+</mapper>

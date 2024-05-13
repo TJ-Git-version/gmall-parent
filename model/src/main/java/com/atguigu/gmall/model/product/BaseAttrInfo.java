@@ -35,7 +35,7 @@ public class BaseAttrInfo extends BaseEntity {
 	private Integer categoryLevel;
 
 	//	平台属性值集合
-	@TableField(exist = false)
+	@TableField(exist = false) // 声明该字段在数据库中不存在，不映射到数据库中
 	private List<BaseAttrValue> attrValueList;
 
 }
