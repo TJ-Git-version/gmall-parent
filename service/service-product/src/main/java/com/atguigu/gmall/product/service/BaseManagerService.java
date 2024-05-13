@@ -4,6 +4,7 @@ import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.atguigu.gmall.model.product.BaseCategory1;
 import com.atguigu.gmall.model.product.BaseCategory2;
 import com.atguigu.gmall.model.product.BaseCategory3;
+import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
@@ -37,4 +38,18 @@ public interface BaseManagerService {
      * @return
      */
     List<BaseAttrInfo> getAttrInfoList(Long category1Id, Long category2Id, Long category3Id);
+
+    /**
+     * 保存和修改平台属性方法
+     * @param baseAttrInfo
+     */
+    void saveAttrInfo(BaseAttrInfo baseAttrInfo);
+
+    /**
+     * 根据属性id获取属性值列表
+     * @param attrId
+     * @return
+     */
+    BaseAttrInfo getBaseAttrInfo(Long attrId);
+
 }

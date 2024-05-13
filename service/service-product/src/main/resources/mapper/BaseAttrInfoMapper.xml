@@ -13,7 +13,7 @@
     <resultMap id="BaseAttrInfoMap" type="com.atguigu.gmall.model.product.BaseAttrInfo" autoMapping="true">
         <id property="id" column="id"/> <!-- 主键 -->
         <collection property="attrValueList" ofType="com.atguigu.gmall.model.product.BaseAttrValue" autoMapping="true">
-            <id property="id" column="bav_id"/> <!-- 主键 -->
+            <id property="id" column="attr_value_id"/> <!-- 主键 -->
         </collection>
     </resultMap>
 
@@ -24,7 +24,7 @@
             bai.attr_name,
             bai.category_id,
             bai.category_level,
-            bav.id bav_id,
+            bav.id attr_value_id,
             bav.value_name,
             bav.attr_id
         from base_attr_info bai

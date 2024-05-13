@@ -7,7 +7,8 @@ mybatis-plus:
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.136.132:3306/gmall_product?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+#    url: jdbc:mysql://192.168.136.132:3306/gmall_product?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    url: jdbc:mysql://192.168.136.132:3306/gmall_product?useUnicode=true&serverTimezone=UTC&useSSL=false
     username: root
     password: root
   redis:
