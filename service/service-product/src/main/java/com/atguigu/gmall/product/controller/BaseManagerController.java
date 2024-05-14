@@ -57,18 +57,18 @@ public class BaseManagerController {
     /**
      * 获取二级分类列表
      */
-    @GetMapping("/getCategory2")
+    @GetMapping("/getCategory2/{category1Id}")
     @ApiOperation("获取二级分类列表")
-    public Result<List<BaseCategory2>> getCategory2List(Long category1Id) {
+    public Result<List<BaseCategory2>> getCategory2List(@PathVariable Long category1Id) {
         return Result.ok(baseManagerService.getCategory2List(category1Id));
     }
 
     /**
      * 获取三级分类列表
      */
-    @GetMapping("/getCategory3")
+    @GetMapping("/getCategory3/{category2Id}")
     @ApiOperation("获取三级分类列表")
-    public Result<List<BaseCategory3>> getCategory3List(Long category2Id) {
+    public Result<List<BaseCategory3>> getCategory3List(@PathVariable Long category2Id) {
         return Result.ok(baseManagerService.getCategory3List(category2Id));
     }
 
