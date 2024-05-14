@@ -31,9 +31,11 @@ public class BaseManagerServiceImpl implements BaseManagerService {
      */
     @Override
     public BaseAttrInfo getBaseAttrInfo(Long attrId) {
+        // 查询属性信息
         BaseAttrInfo baseAttrInfo = baseAttrInfoMapper.selectById(attrId);
+        // 查询属性值列表，避免查询属性值时，属性被删除
         if (baseAttrInfo != null) {
-            List<BaseAttrValue> baseAttrValueList = getAttrValueList(attrId);
+            List<BaseAttrValue> baseAttrValueList = getAttrValueList(baseAttrInfo.getId());
             baseAttrInfo.setAttrValueList(baseAttrValueList);
         }
         return baseAttrInfo;
