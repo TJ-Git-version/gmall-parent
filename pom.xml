@@ -19,6 +19,7 @@
         <module>common</module>
         <module>model</module>
         <module>service</module>
+        <module>server-gateway</module>
     </modules>
 
     <!--定义jar包的版本号-->
