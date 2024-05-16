@@ -3,6 +3,8 @@ package com.atguigu.gmall.product.controller;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.BaseManagerService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -20,6 +22,8 @@ import java.util.List;
 public class BaseManagerController {
 
     private final BaseManagerService baseManagerService;
+
+
 
     /**
      * 根据属性id获取属性值列表

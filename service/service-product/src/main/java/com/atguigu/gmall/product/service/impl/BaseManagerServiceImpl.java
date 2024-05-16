@@ -5,8 +5,10 @@ import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.BaseManagerService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     private final BaseCategory3Mapper baseCategory3Mapper;
     private final BaseAttrInfoMapper baseAttrInfoMapper;
     private final BaseAttrValueMapper baseAttrValueMapper;
+    private final SpuInfoMapper spuInfoMapper;
 
     /**
      * 根据属性id获取属性值列表
@@ -43,6 +46,7 @@ public class BaseManagerServiceImpl implements BaseManagerService {
 
     /**
      * 根据属性id获取属性值列表
+     *
      * @param attrId
      * @return
      */

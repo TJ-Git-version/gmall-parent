@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.BaseCategoryTrademarkMapper">
+
+    <resultMap id="BaseCategoryTrademarkResultMap" type="com.atguigu.gmall.model.product.BaseCategoryTrademark">
+        <result property="category3Id" column="category3_id"/>
+        <result property="trademarkId" column="trademark_id"/>
+        <association property="baseTrademark" javaType="com.atguigu.gmall.model.product.BaseTrademark" autoMapping="true">
+            <result property="id" column="trademark_id"/>
+        </association>
+    </resultMap>
+
+    <!-- 根据category3Id查询品牌列表 -->
+    <select id="findTrademarkList" resultType="com.atguigu.gmall.model.product.BaseTrademark">
+        select bt.id, bt.tm_name, bt.logo_url, bt.create_time, bt.update_time
+        from base_category_trademark bct
+                 inner join base_trademark bt
+                            on bct.trademark_id = bt.id
+        where bct.is_deleted = 0
+          and bct.category3_id = #{category3Id};
+    </select>
+</mapper>

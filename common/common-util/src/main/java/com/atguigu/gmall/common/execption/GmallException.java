@@ -26,6 +26,15 @@ public class GmallException extends RuntimeException {
     }
 
     /**
+     * 通过状态码和错误消息创建异常对象
+     * @param message
+     */
+    public GmallException(String message) {
+        super(message);
+        this.code = 500;
+    }
+
+    /**
      * 接收枚举类型对象
      * @param resultCodeEnum
      */
