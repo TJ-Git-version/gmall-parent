@@ -52,7 +52,7 @@ public class FileServiceImpl implements FileService {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             } else {
                 // 如果存储桶已经存在，则忽略
-                System.out.println("Bucket '" + bucketName + "' already exists.");
+                log.info("Bucket {} already exists", bucketName);
             }
             // 这种是流式上传，可以直接上传MultipartFile对象
             LocalDate nowDate = LocalDate.now();

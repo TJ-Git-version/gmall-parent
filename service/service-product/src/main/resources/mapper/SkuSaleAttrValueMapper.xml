@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.SkuSaleAttrValueMapper">
+
+    <!-- 批量插入销售属性值 -->
+    <insert id="insertBatch">
+        insert into sku_sale_attr_value (sku_id, spu_id, sale_attr_value_id, create_time, update_time, is_deleted)
+        values
+        <foreach collection="skuSaleAttrValueList" item="skuSaleAttrValue" separator=",">
+            (#{skuSaleAttrValue.skuId}, #{skuSaleAttrValue.spuId}, #{skuSaleAttrValue.saleAttrValueId}, now(), now(), 0)
+        </foreach>
+    </insert>
+</mapper>

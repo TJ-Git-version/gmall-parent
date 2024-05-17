@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.SpuSaleAttrMapper">
+
+    <resultMap id="SpuSaleAttrResultMap" type="com.atguigu.gmall.model.product.SpuSaleAttr" autoMapping="true">
+        <id property="id" column="id"/>
+        <collection property="spuSaleAttrValueList" ofType="com.atguigu.gmall.model.product.SpuSaleAttrValue" autoMapping="true">
+            <id property="id" column="sale_attr_value_id"/>
+        </collection>
+    </resultMap>
+
+    <!-- 根据spuId查询spu销售属性列表 -->
+    <select id="getSpuSaleAttrList" resultMap="SpuSaleAttrResultMap">
+        select ssa.id,
+               ssa.spu_id,
+               ssa.sale_attr_name,
+               ssa.base_sale_attr_id,
+               ssav.id as sale_attr_value_id,
+               ssav.sale_attr_value_name
+        from spu_sale_attr ssa
+                 inner join spu_sale_attr_value ssav
+                            on ssa.spu_id = ssav.spu_id and ssa.base_sale_attr_id = ssav.base_sale_attr_id
+        where ssa.is_deleted = 0
+          and ssav.is_deleted = 0
+          and ssa.spu_id = #{spuId}
+    </select>
+</mapper>

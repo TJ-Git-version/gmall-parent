@@ -23,6 +23,7 @@ public class SkuInfo extends BaseEntity {
 
 
     public SkuInfo(){}
+	//	构造方法，传入skuId
 	public SkuInfo(Long skuId){
 		setId(skuId);
 	}
@@ -56,6 +57,10 @@ public class SkuInfo extends BaseEntity {
 	@ApiModelProperty(value = "品牌(冗余)")
 	@TableField("tm_id")
 	private Long tmId;
+
+	@ApiModelProperty(value = "品牌名称")
+	@TableField(exist = false)
+	private String tmName;
 
 	@ApiModelProperty(value = "三级分类id（冗余)")
 	@TableField("category3_id")

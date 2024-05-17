@@ -29,7 +29,7 @@
             bav.attr_id
         from base_attr_info bai
                  inner join base_attr_value bav
-                            on bav.attr_id = bai.id
+                            on bav.attr_id = bai.id and bai.is_deleted = 0 and bav.is_deleted = 0
         <where>
             <if test="category1Id != null and category1Id != 0">
                 (bai.category_id = #{category1Id} and bai.category_level = 1)

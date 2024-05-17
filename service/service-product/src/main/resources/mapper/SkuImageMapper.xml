@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.SkuImageMapper">
+
+    <!--批量插入sku图片-->
+    <insert id="insertBatch">
+        insert into sku_image(sku_id, img_name, img_url, spu_img_id, is_default, create_time, update_time, is_deleted)
+        values
+        <foreach collection="skuImageList" item="skuImage" separator=",">
+            (#{skuImage.skuId}, #{skuImage.imgName}, #{skuImage.imgUrl}, #{skuImage.spuImgId}, #{skuImage.isDefault}, now(), now(), 0)
+        </foreach>
+    </insert>
+</mapper>

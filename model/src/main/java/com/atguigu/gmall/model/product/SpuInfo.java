@@ -38,6 +38,10 @@ public class SpuInfo extends BaseEntity {
 	@TableField("tm_id")
 	private Long tmId;
 
+	@ApiModelProperty(value = "品牌名称")
+	@TableField(exist = false)
+	private String tmName;
+
 	// 销售属性集合
 	@TableField(exist = false)
 	private List<SpuSaleAttr> spuSaleAttrList;
