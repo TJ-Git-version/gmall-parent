@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: web-all
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.136.132:8848
+      config:
+        server-addr: 192.168.136.132:8848
+        file-extension: yaml
+        prefix: ${spring.application.name}
+        shared-configs:
+          - common.yaml
