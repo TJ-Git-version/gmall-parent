@@ -10,4 +10,14 @@
             (#{skuSaleAttrValue.skuId}, #{skuSaleAttrValue.spuId}, #{skuSaleAttrValue.saleAttrValueId}, now(), now(), 0)
         </foreach>
     </insert>
+    <!--根据spuId 查询sku的销售属性值，使用Map封装返回数据-->
+    <select id="getSkuValueIdsMap" resultType="java.util.Map">
+        select
+            skav.sku_id,
+            GROUP_CONCAT(skav.sale_attr_value_id order by ssav.base_sale_attr_id SEPARATOR '|') as value_ids
+        from sku_sale_attr_value skav
+                 inner join spu_sale_attr_value ssav on skav.sale_attr_value_id = ssav.id
+        where skav.spu_id = #{spuId} and skav.is_deleted = 0
+        group by skav.sku_id;
+    </select>
 </mapper>

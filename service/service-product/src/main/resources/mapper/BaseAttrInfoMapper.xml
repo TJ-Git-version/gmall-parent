@@ -44,4 +44,26 @@
         order by bai.category_level asc, bai.id asc
     </select>
 
+    <!--根据skuId查询属性和属性值列表-->
+    <select id="getAttrList" resultMap="BaseAttrInfoMap">
+        select
+            bai.id,
+            bai.attr_name,
+            bai.category_id,
+            bai.category_level,
+            sav.sku_id,
+            bav.id as attr_value_id,
+            bav.value_name,
+            bav.attr_id
+        from base_attr_info bai
+                 inner join base_attr_value bav on bai.id = bav.attr_id
+                 inner join sku_attr_value sav on sav.value_id = bav.id
+        where
+            bai.is_deleted = 0
+          and bav.is_deleted = 0
+          and sav.is_deleted = 0
+          and sav.sku_id = #{skuId}
+        order by bai.category_level, bai.id;
+    </select>
+
 </mapper>

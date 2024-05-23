@@ -24,4 +24,26 @@
           and ssav.is_deleted = 0
           and ssa.spu_id = #{spuId}
     </select>
+
+    <!-- 根据skuId和spuId查询商品销售属性组合 -->
+    <select id="getSpuSaleAttrListCheckBySku" resultMap="SpuSaleAttrResultMap">
+        select
+            ssa.id,
+            ssa.spu_id,
+            ssa.sale_attr_name,
+            ssa.base_sale_attr_id,
+            ssav.id as sale_attr_value_id,
+            ssav.sale_attr_value_name,
+            sksav.id as sku_sale_attr_value_id,
+            sksav.sku_id,
+            if(sksav.sku_id is null, 0, 1) as is_checked
+        from spu_sale_attr ssa
+                 inner join spu_sale_attr_value ssav
+                            on ssa.spu_id = ssav.spu_id and ssa.base_sale_attr_id = ssav.base_sale_attr_id
+                 left join sku_sale_attr_value sksav on sksav.sale_attr_value_id = ssav.id and sksav.sku_id = #{skuId}
+        where ssa.is_deleted = 0
+          and ssav.is_deleted = 0
+          and ssa.spu_id = #{spuId}
+        order by ssa.base_sale_attr_id, ssav.id
+    </select>
 </mapper>

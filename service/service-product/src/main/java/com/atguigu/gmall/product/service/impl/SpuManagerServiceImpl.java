@@ -3,7 +3,6 @@ package com.atguigu.gmall.product.service.impl;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.SpuManagerService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -48,6 +47,7 @@ public class SpuManagerServiceImpl implements SpuManagerService {
     public List<SpuImage> getSpuImageList(Long spuId) {
         return spuImageMapper.selectList(Wrappers.<SpuImage>lambdaQuery().eq(SpuImage::getSpuId, spuId));
     }
+
     /**
      * 根据spuId获取spu信息
      * @param spuId

@@ -74,12 +74,15 @@ public class SkuInfo extends BaseEntity {
 	@TableField("is_sale")
 	private Integer isSale;
 
+	@ApiModelProperty(value = "sku图片列表")
 	@TableField(exist = false)
 	List<SkuImage> skuImageList;
 
+	@ApiModelProperty(value = "sku属性列表")
 	@TableField(exist = false)
 	List<SkuAttrValue> skuAttrValueList;
 
+	@ApiModelProperty(value = "sku销售属性列表")
 	@TableField(exist = false)
 	List<SkuSaleAttrValue> skuSaleAttrValueList;
 }
