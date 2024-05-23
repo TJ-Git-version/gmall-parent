@@ -3,7 +3,6 @@ package com.atguigu.gmall.item.controller;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.item.service.ItemApiService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
