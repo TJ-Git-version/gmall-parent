@@ -48,14 +48,14 @@ public class ProductApiController {
      */
     @GetMapping("/findSpuPosterBySpuId/{spuId}")
     @ApiOperation("根据spuid获取商品海报")
-    public List<SpuImage> findSpuPosterBySpuId(@PathVariable("spuId") Long spuId) {
-        return spuManagerService.getSpuImageList(spuId);
+    public List<SpuPoster> findSpuPosterBySpuId(@PathVariable("spuId") Long spuId) {
+        return spuManagerService.findSpuPosterBySpuId(spuId);
     }
 
     /**
      * 根据skuId和spuId查询商品销售属性组合
      * @param skuId
-     * @param spuId
+     * @param spuId            v
      * @return
      */
     @GetMapping("/getSpuSaleAttrListCheckBySku/{skuId}/{spuId}")

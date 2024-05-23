@@ -38,6 +38,13 @@ public class SpuManagerServiceImpl implements SpuManagerService {
     @Autowired
     private BaseTrademarkMapper baseTrademarkMapper;
 
+
+
+    @Override
+    public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
+        return spuPosterMapper.selectList(Wrappers.<SpuPoster>lambdaQuery().eq(SpuPoster::getSpuId, spuId));
+    }
+
     /**
      * 根据spuId获取spu图片列表
      * @param spuId
@@ -47,6 +54,7 @@ public class SpuManagerServiceImpl implements SpuManagerService {
     public List<SpuImage> getSpuImageList(Long spuId) {
         return spuImageMapper.selectList(Wrappers.<SpuImage>lambdaQuery().eq(SpuImage::getSpuId, spuId));
     }
+
 
     /**
      * 根据spuId获取spu信息

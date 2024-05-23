@@ -1,9 +1,6 @@
 package com.atguigu.gmall.product.service;
 
-import com.atguigu.gmall.model.product.BaseSaleAttr;
-import com.atguigu.gmall.model.product.SpuImage;
-import com.atguigu.gmall.model.product.SpuInfo;
-import com.atguigu.gmall.model.product.SpuSaleAttr;
+import com.atguigu.gmall.model.product.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
@@ -46,4 +43,10 @@ public interface SpuManagerService {
      */
     List<SpuImage> getSpuImageList(Long spuId);
 
+    /**
+     * 根据spuId查询海报图片
+     * @param spuId
+     * @return
+     */
+    List<SpuPoster> findSpuPosterBySpuId(Long spuId);
 }
