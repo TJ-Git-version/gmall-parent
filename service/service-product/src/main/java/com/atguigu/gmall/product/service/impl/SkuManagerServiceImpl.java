@@ -11,6 +11,8 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -42,6 +44,8 @@ public class SkuManagerServiceImpl implements SkuManagerService {
     private BaseAttrInfoMapper baseAttrInfoMapper;
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
+    @Autowired
+    private RedissonClient redissonClient;
 
 
     @Override
@@ -105,8 +109,11 @@ public class SkuManagerServiceImpl implements SkuManagerService {
      */
     @Override
     public SkuInfo getSkuInfo(Long skuId) {
-        // return getSkuInfoDB(skuId);
-        return getRedisSkuInfo(skuId);
+        // 第一种使用redis实现分布式锁
+        // return getSkuInfoRedis(skuId);
+
+        // 第二种：使用redisson分布式锁
+        return getSkuInfoRedisson(skuId);
     }
 
     /**
@@ -116,7 +123,121 @@ public class SkuManagerServiceImpl implements SkuManagerService {
      * @param skuId
      * @return
      */
-    private SkuInfo getRedisSkuInfo(Long skuId) {
+    // 第二种：使用redisson分布式锁
+    private SkuInfo getSkuInfoRedisson(Long skuId) {
+        try {
+            // 1、构建redis skuinfo key
+            String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+            // 2、根据 skukey 查询redis缓存
+            SkuInfo skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+            // 3、判断缓存数据是否为空
+            if (skuInfo != null) {
+                // 4、返回缓存数据
+                return skuInfo;
+            } else {
+                // 5、加分布式锁
+                String lockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+                RLock lock = redissonClient.getLock(lockKey);
+                // 第一个参数：等待时间  第二个参数：锁持有时间  第三个参数：时间单位
+                boolean lockFlag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+                // 获取到锁了，查询数据库并缓存
+                if (lockFlag) {
+                    try {
+                        // 查询sku基本信息
+                        SkuInfo skuInfoDB = getSkuInfoDB(skuId);
+                        if (skuInfoDB != null) {
+                            // 缓存skuInfo
+                            redisTemplate.opsForValue().set(skuKey, skuInfoDB, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+                            return skuInfoDB;
+                        }
+                        skuInfoDB = new SkuInfo();
+                        // skuInfo为空，也进行缓存，设置过期时间10分钟
+                        redisTemplate.opsForValue().set(skuKey, skuInfoDB, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.MINUTES);
+                        return skuInfoDB;
+                    } catch (Exception e) {
+                        log.error("获取sku信息异常：{}", e.getMessage());
+                    } finally {
+                        lock.unlock();
+                    }
+                }else {
+                    // 其他线程等待
+                    Thread.sleep(1000);
+                    return getSkuInfoRedisson(skuId);
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("获取sku信息异常：{}", e.getMessage());
+            // throw new GmallException("获取sku信息异常，请联系管理员，谢谢！");
+        }
+        // 防止缓存宕机，进行兜底方法
+        return getSkuInfoDB(skuId);
+    }
+
+    // private SkuInfo getSkuInfoRedisson1(Long skuId) {
+    //     SkuInfo skuInfo = null;
+    //     try {
+    //         // 缓存存储数据：key-value
+    //         // 定义key sku:skuId:info
+    //         String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+    //         // 获取里面的数据？ redis 有五种数据类型 那么我们存储商品详情 使用哪种数据类型？
+    //         // 获取缓存数据
+    //         skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+    //         // 如果从缓存中获取的数据是空
+    //         if (skuInfo == null) {
+    //             // 直接获取数据库中的数据，可能会造成缓存击穿。所以在这个位置，应该添加锁。
+    //             // 第二种：redisson
+    //             // 定义锁的key sku:skuId:lock  set k1 v1 px 10000 nx
+    //             String lockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+    //             RLock lock = redissonClient.getLock(lockKey);
+    //         /*
+    //         第一种： lock.lock();
+    //         第二种:  lock.lock(10,TimeUnit.SECONDS);
+    //         第三种： lock.tryLock(100,10,TimeUnit.SECONDS);
+    //          */
+    //             // 尝试加锁
+    //             boolean res = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+    //             if (res) {
+    //                 try {
+    //                     // 处理业务逻辑 获取数据库中的数据
+    //                     // 真正获取数据库中的数据 {数据库中到底有没有这个数据 = 防止缓存穿透}
+    //                     skuInfo = getSkuInfoDB(skuId);
+    //                     // 从数据库中获取的数据就是空
+    //                     if (skuInfo == null) {
+    //                         // 为了避免缓存穿透 应该给空的对象放入缓存
+    //                         SkuInfo skuInfo1 = new SkuInfo(); // 对象的地址
+    //                         redisTemplate.opsForValue().set(skuKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+    //                         return skuInfo1;
+    //                     }
+    //                     // 查询数据库的时候，有值
+    //                     redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+    //
+    //                     // 使用redis 用的是lua 脚本删除 ，但是现在用么？ lock.unlock
+    //                     return skuInfo;
+    //
+    //                 } catch (Exception e) {
+    //                     e.printStackTrace();
+    //                 } finally {
+    //                     // 解锁：
+    //                     lock.unlock();
+    //                 }
+    //             } else {
+    //                 // 其他线程等待
+    //                 Thread.sleep(1000);
+    //                 return getSkuInfo(skuId);
+    //             }
+    //         } else {
+    //
+    //             return skuInfo;
+    //         }
+    //     } catch (InterruptedException e) {
+    //         e.printStackTrace();
+    //     }
+    //     // 为了防止缓存宕机：从数据库中获取数据
+    //     return getSkuInfoDB(skuId);
+    // }
+
+    // 第一种：使用redis
+    private SkuInfo getSkuInfoRedis(Long skuId) {
         try {
             // 1、构建redis skuinfo key
             String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
@@ -158,7 +279,7 @@ public class SkuManagerServiceImpl implements SkuManagerService {
                 } else {
                     // 自旋等待锁释放
                     Thread.sleep(500);
-                    getRedisSkuInfo(skuId);
+                    getSkuInfoRedis(skuId);
                 }
             }
         } catch (Exception e) {
