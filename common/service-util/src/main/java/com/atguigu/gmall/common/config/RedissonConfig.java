@@ -26,10 +26,19 @@ public class RedissonConfig {
 
     private String port;
 
+    // 连接超时时间，单位：毫秒
     private int timeout = 3000;
+
+    // 核心线程数
     private int connectionPoolSize = 64;
+
+    // 最小空闲连接数
     private int connectionMinimumIdleSize=10;
+
+    // 心跳包间隔时间，单位：毫秒
     private int pingConnectionInterval = 60000;
+
+    // Redisson地址前缀
     private static String ADDRESS_PREFIX = "redis://";
 
     /**
@@ -44,11 +53,11 @@ public class RedissonConfig {
         }
         SingleServerConfig serverConfig = config.useSingleServer()
                 //redis://127.0.0.1:7181
-                .setAddress(ADDRESS_PREFIX + this.host + ":" + port)
-                .setTimeout(this.timeout)
-                .setPingConnectionInterval(pingConnectionInterval)
-                .setConnectionPoolSize(this.connectionPoolSize)
-                .setConnectionMinimumIdleSize(this.connectionMinimumIdleSize)
+                .setAddress(ADDRESS_PREFIX + this.host + ":" + port) // redis地址
+                .setTimeout(this.timeout) // 连接超时时间
+                .setPingConnectionInterval(pingConnectionInterval) // 心跳包间隔时间
+                .setConnectionPoolSize(this.connectionPoolSize) // 核心线程数
+                .setConnectionMinimumIdleSize(this.connectionMinimumIdleSize) // 最小空闲连接数
                 ;
         if(!StringUtils.isEmpty(this.password)) {
             serverConfig.setPassword(this.password);

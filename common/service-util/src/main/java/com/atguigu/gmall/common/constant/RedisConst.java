@@ -14,9 +14,9 @@ public class RedisConst {
     public static final long SKUKEY_TEMPORARY_TIMEOUT = 10 * 60; // 10分钟
 
     //单位：秒 尝试获取锁的最大等待时间
-    public static final long SKULOCK_EXPIRE_PX1 = 1; // 1秒
+    public static final long SKULOCK_EXPIRE_PX1 = 100; // 100秒
     //单位：秒 锁的持有时间
-    public static final long SKULOCK_EXPIRE_PX2 = 1; // 1秒
+    public static final long SKULOCK_EXPIRE_PX2 = 10; // 1秒
     public static final String SKULOCK_SUFFIX = ":lock"; // sku:10001:lock
 
     public static final String USER_KEY_PREFIX = "user:"; // user:10001:info
