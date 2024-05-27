@@ -11,5 +11,6 @@ spring:
         server-addr: 192.168.136.132:8848
         prefix: ${spring.application.name}
         file-extension: yaml
-        shared-configs:
+        shared-configs: # 共享配置
           - data-id: common.yaml
+            refresh: true # 共享配置是否刷新
