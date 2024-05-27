@@ -103,7 +103,7 @@ public class ItemApiServiceImpl implements ItemApiService {
                 skuAttrListCompletableFuture, spuSaleAttrListCompletableFuture,
                 categoryViewCompletableFuture, skuValueIdsMapCompletableFuture,
                 spuPosterListCompletableFuture
-        );
+        ).join();
         return itemMap;
     }
 }
