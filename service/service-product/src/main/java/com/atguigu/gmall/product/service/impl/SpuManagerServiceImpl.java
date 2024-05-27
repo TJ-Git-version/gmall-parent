@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.SpuManagerService;
@@ -41,6 +42,7 @@ public class SpuManagerServiceImpl implements SpuManagerService {
 
 
     @Override
+    @GmallCache(prefix = "spuPoster:")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         return spuPosterMapper.selectList(Wrappers.<SpuPoster>lambdaQuery().eq(SpuPoster::getSpuId, spuId));
     }
@@ -51,6 +53,7 @@ public class SpuManagerServiceImpl implements SpuManagerService {
      * @return
      */
     @Override
+    @GmallCache(prefix = "spuImages:")
     public List<SpuImage> getSpuImageList(Long spuId) {
         return spuImageMapper.selectList(Wrappers.<SpuImage>lambdaQuery().eq(SpuImage::getSpuId, spuId));
     }

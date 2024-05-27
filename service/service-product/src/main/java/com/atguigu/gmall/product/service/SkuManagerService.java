@@ -70,4 +70,12 @@ public interface SkuManagerService {
      * @return
      */
     Map<Object, Object> getSkuValueIdsMap(Long spuId);
+
+    /**
+     * 获取所有skuId
+     * @return
+     */
+    List<Long> getSkuInfoIds();
+
+
 }

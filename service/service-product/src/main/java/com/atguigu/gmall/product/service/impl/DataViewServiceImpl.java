@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.product.mapper.BaseCategoryViewMapper;
 import com.atguigu.gmall.product.service.DataViewService;
@@ -19,6 +20,7 @@ public class DataViewServiceImpl implements DataViewService {
      * @return
      */
     @Override
+    @GmallCache(prefix = "categoryView:")
     public BaseCategoryView getBaseCategoryView(Long category3Id) {
         return baseCategoryViewMapper.selectById(category3Id);
     }

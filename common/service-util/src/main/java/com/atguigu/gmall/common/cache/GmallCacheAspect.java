@@ -2,9 +2,10 @@ package com.atguigu.gmall.common.cache;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -13,108 +14,141 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import springfox.documentation.spring.web.json.Json;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author atguigu-mqx
- */
-@Component
 @Aspect
+@Component
+@Slf4j
+@SuppressWarnings("all")
 public class GmallCacheAspect {
 
     @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
     private RedissonClient redissonClient;
 
-    @Autowired
-    private RedisTemplate redisTemplate;
+    private String prefix;
+    private String suffix;
+    private String lockSuffix;
+    private int expire;
+    private int emptyExpire;
+    private int tryLockTimeout;
+    private int lockExpire;
 
-    //  定义一个环绕通知！
-    @SneakyThrows
-    @Around("@annotation(com.atguigu.gmall.common.cache.GmallCache)")
-    public Object gmallCacheAspectMethod(ProceedingJoinPoint point){
-        //  定义一个对象
-        Object obj = new Object();
-        /*
-         业务逻辑！
-         1. 必须先知道这个注解在哪些方法 || 必须要获取到方法上的注解
-         2. 获取到注解上的前缀
-         3. 必须要组成一个缓存的key！
-         4. 可以通过这个key 获取缓存的数据
-            true:
-                直接返回！
-            false:
-                分布式锁业务逻辑！
-         */
-        MethodSignature methodSignature = (MethodSignature) point.getSignature();
+    /**
+     * 初始化缓存参数
+     * @param methodSignature
+     */
+
+    private void initParamters(MethodSignature methodSignature) {
         GmallCache gmallCache = methodSignature.getMethod().getAnnotation(GmallCache.class);
-        //   获取到注解上的前缀
-        String prefix = gmallCache.prefix();
-        //  组成缓存的key！ 获取方法传递的参数
-        String key = prefix+ Arrays.asList(point.getArgs()).toString();
+        // 获取缓存前缀
+        prefix = gmallCache.prefix();
+        // 获取缓存后缀
+        suffix = gmallCache.suffix();
+        // 获取缓存锁后缀
+        lockSuffix = gmallCache.lockSuffix();
+        // 缓存过期时间
+        expire = gmallCache.expire();
+        // 缓存空值过期时间
+        emptyExpire = gmallCache.emptyExpire();
+        // 尝试加锁超时时间
+        tryLockTimeout = gmallCache.tryLockTimeout();
+        // 锁过期时间
+        lockExpire = gmallCache.lockExpire();
+    }
+
+    @Around("@annotation(com.atguigu.gmall.common.cache.GmallCache)")
+    public Object gmallCacheProfiling(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object result = new Object();
+        // 获取缓存注解
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+        // 初始化缓存参数
+        initParamters(methodSignature);
+        // 获取方法参数
+        Object[] args = joinPoint.getArgs();
         try {
-            //  可以通过这个key 获取缓存的数据
-            obj = this.getRedisData(key,methodSignature);
-            if (obj==null){
-                //  分布式业务逻辑
-                //  设置分布式锁，进入数据库进行查询数据！
-                RLock lock = redissonClient.getLock(key + ":lock");
-                //  调用trylock方法
-                boolean result = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
-                //  判断
-                if(result){
-                    try {
-                        //  执行业务逻辑：直接从数据库获取数据
-                        //  这个注解 @GmallCache 有可能在 BaseCategoryView getCategoryName , List<SpuSaleAttr> getSpuSaleAttrListById ....
-                        obj = point.proceed(point.getArgs());
-                        //  防止缓存穿透
-                        if (obj==null){
-                            Object object = new Object();
-                            //  将缓存的数据变为 Json 的 字符串
-                            this.redisTemplate.opsForValue().set(key, JSON.toJSONString(object),RedisConst.SKUKEY_TEMPORARY_TIMEOUT,TimeUnit.SECONDS);
-                            return object;
-                        }
-                        //  将缓存的数据变为 Json 的 字符串
-                        this.redisTemplate.opsForValue().set(key, JSON.toJSONString(obj),RedisConst.SKUKEY_TIMEOUT,TimeUnit.SECONDS);
-                        return obj;
-                    }finally {
-                        //  解锁
-                        lock.unlock();
-                    }
-                }else {
-                    //  没有获取到
-                    try {
-                        Thread.sleep(100);
-                        return gmallCacheAspectMethod(point);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            // 构建缓存key
+            String infoKey = prefix + Arrays.asList(args) + suffix;
+            // 获取缓存数据
+            result = getRedisData(infoKey, methodSignature);
+            if (result != null) {
+                return result;
+            } else { // 缓存为空，查询数据库获取数据, 并添加分布式锁
+                // 构建分布式锁key
+                String lockKey = prefix + Arrays.asList(args) + lockSuffix;
+                // 尝试加锁
+                RLock lock = redissonClient.getLock(lockKey);
+                try {
+                    return useRedissionLock(joinPoint, args, infoKey, lock);
+                } catch (Throwable e) {
+                    log.error("分布式锁异常", e);
+                } finally {
+                    // 释放锁
+                    lock.unlock();
                 }
-            }else {
-                //  直接从缓存获取的数据！
-                return obj;
             }
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
+        } catch (Exception e) {
+            log.error("缓存异常", e);
         }
-        //  数据库兜底！
-        return point.proceed(point.getArgs());
+        return joinPoint.proceed(args);
+    }
+
+
+    /**
+     * 使用Redission分布式锁
+     *
+     * @param joinPoint
+     * @param expire
+     * @param args
+     * @param infoKey
+     * @param lock
+     * @return
+     * @throws Throwable
+     */
+    private Object useRedissionLock(ProceedingJoinPoint joinPoint, Object[] args, String infoKey, RLock lock) throws Throwable {
+        Object result;
+        boolean flag = lock.tryLock(tryLockTimeout, lockExpire, TimeUnit.SECONDS);
+        if (flag) {
+            // 查询数据库获取数据
+            result = joinPoint.proceed(args);
+            if (result != null) {
+                redisTemplate.opsForValue().set(infoKey, result, expire, TimeUnit.SECONDS);
+                log.info("缓存数据成功, key: " + infoKey);
+                return result;
+            } else {
+                // 缓存为空，设置空值
+                MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+                Class clazz = methodSignature.getReturnType();
+                result = clazz.getConstructor().newInstance();
+                redisTemplate.opsForValue().set(infoKey, JSON.toJSONString(result), emptyExpire, TimeUnit.SECONDS);
+                log.info("缓存数据为空, 设置空值, key: " + infoKey);
+                return result;
+            }
+        } else {
+            Thread.sleep(500);
+            return gmallCacheProfiling(joinPoint);
+        }
     }
 
     /**
-     * 从缓存中获取数据！
-     * @param key
+     * 获取缓存数据
+     *
+     * @param infoKey
+     * @param signature
      * @return
      */
-    private Object getRedisData(String key,MethodSignature methodSignature) {
-        //  在向缓存存储数据的时候，将数据变为Json 字符串了！
-        //  通过这个key 获取到缓存的value
-        String strJson = (String) this.redisTemplate.opsForValue().get(key);
-        //  判断
-        if(!StringUtils.isEmpty(strJson)){
-            //  将字符串转换为对应的数据类型！
-            return JSON.parseObject(strJson,methodSignature.getReturnType());
+    private Object getRedisData(String infoKey, MethodSignature signature) {
+        // 获取缓存数据
+        String redisData = JSON.toJSONString(redisTemplate.opsForValue().get(infoKey));
+        // 判断缓存是否为空
+        if (StringUtils.isNotBlank(redisData)) {
+            // 反序列化
+            Class clazz = signature.getReturnType();
+            return JSON.parseObject(redisData, clazz);
         }
         return null;
     }
