@@ -113,8 +113,29 @@ public class SkuManagerServiceImpl implements SkuManagerService {
      * @return
      */
     @Override
-    @GmallCache(prefix = "skuPrice:")
+    // @GmallCache(prefix = "skuPrice:")
     public BigDecimal getSkuPrice(Long skuId) {
+        RLock rLock = redissonClient.getLock(RedisConst.SKUKEY_PRICE_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX);
+        try {
+            boolean flag = rLock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+            if (flag) {
+                SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+                if (ObjectUtils.isNotNull(skuInfo)) {
+                    return skuInfo.getPrice();
+                } else {
+                    return new BigDecimal("0");
+                }
+            } else {
+                // 其他线程等待
+                Thread.sleep(500);
+                return getSkuPrice(skuId);
+            }
+        } catch (InterruptedException e) {
+            log.error("获取sku价格异常：{}", e.getMessage());
+        } finally {
+            rLock.unlock();
+        }
+        // 出现异常，进行兜底方法
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
         if (ObjectUtils.isNotNull(skuInfo)) {
             return skuInfo.getPrice();

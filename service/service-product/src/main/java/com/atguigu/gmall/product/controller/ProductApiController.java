@@ -1,7 +1,9 @@
 package com.atguigu.gmall.product.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
+import com.atguigu.gmall.product.service.BaseCategoryTrademarkService;
 import com.atguigu.gmall.product.service.DataViewService;
 import com.atguigu.gmall.product.service.SkuManagerService;
 import com.atguigu.gmall.product.service.SpuManagerService;
@@ -24,6 +26,16 @@ public class ProductApiController {
     private final SpuManagerService spuManagerService;
 
     private final DataViewService dataViewService;
+
+    /**
+     * 获取全部分类信息
+     * @return
+     */
+    @GetMapping("/getBaseCategoryList")
+    @ApiOperation("获取全部分类信息")
+    public List<JSONObject> getBaseCategoryList() {
+        return dataViewService.getBaseCategoryList();
+    }
 
     /**
      *  根据spuId 查询sku的销售属性值，使用Map封装返回数据

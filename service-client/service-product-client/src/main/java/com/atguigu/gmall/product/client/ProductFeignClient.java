@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.client;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.impl.ProductDegradeFeignClient;
 import io.swagger.annotations.ApiOperation;
@@ -18,6 +19,14 @@ import java.util.Map;
  */
 @FeignClient(value = "service-product", fallback = ProductDegradeFeignClient.class)
 public interface ProductFeignClient {
+
+    /**
+     * 获取全部分类信息
+     * @return
+     */
+    @GetMapping("/api/product/inner/getBaseCategoryList")
+    @ApiOperation("获取全部分类信息")
+    public List<JSONObject> getBaseCategoryList();
 
     /**
      *  根据spuId 查询sku的销售属性值，使用Map封装返回数据

@@ -38,6 +38,11 @@ public class BaseCategoryTrademarkServiceImpl extends ServiceImpl<BaseCategoryTr
         return baseMapper.findTrademarkList(category3Id);
     }
 
+    /**
+     * 根据三级分类id查询当前品牌列表
+     * @param category3Id
+     * @return
+     */
     @Override
     public List<BaseTrademark> findCurrentTrademarkList(Long category3Id) {
         List<BaseTrademark> baseTrademarklist=Lists.newArrayList();
