@@ -11,6 +11,32 @@ import java.util.Date;
 import java.util.List;
 
 // Index = goods , Type = info  es 7.8.0 逐渐淡化type！  修改！
+
+/**
+ * 创建索引 goods
+ * @Document：注解，声明这是一个文档类，并指定索引名称、类型名称、分片数、副本数等信息。
+ *    indexName：索引名称，默认为类名小写。
+ *    shards：分片数，集群下生效，默认为5。
+ *    replicas：副本数，集群下生效，默认为1。
+ *    refreshInterval：刷新间隔，默认为1s。
+ *    type：类型名称，默认为类名小写。
+ *    versionType：版本类型，默认为INTERNAL。
+ *  @Id：注解，声明文档的唯一标识，默认使用@Id注解的字段作为文档的主键。
+ *  @Field：注解，声明文档字段，包括字段类型、是否索引、是否分词、是否存储等信息。
+ *      type：字段类型，包括Text、Keyword、Long、Double、Date等。
+ *      FieldType：
+ *          Text：分词字段，支持模糊查询。
+ *          keyword：不分词字段，支持精确查询。
+ *          Long、Double：数值字段。
+ *          Date：日期字段，支持范围查询。
+ *          Nested：支持嵌套文档。
+ *      analyzer：分词器，默认为standard。中文分词器：ik_max_word（细粒度）和ik_smart（粗粒度）。
+ *      searchAnalyzer：搜索分词器，默认为standard。中文建议使用ik_smart（粗粒度）。
+ *          ik_max_word：最细粒度的中文分词器，适合索引和搜索长文本。
+ *          ik_smart：最粗粒度的中文分词器，适合索引短文本。
+ *      store：是否存储，默认为true。
+ *      index：是否索引，默认为true。
+ */
 @Data
 @Document(indexName = "goods" , shards = 3,replicas = 2)
 public class Goods {
