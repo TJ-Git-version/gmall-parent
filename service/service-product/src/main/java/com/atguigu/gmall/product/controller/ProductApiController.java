@@ -3,10 +3,7 @@ package com.atguigu.gmall.product.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
-import com.atguigu.gmall.product.service.BaseCategoryTrademarkService;
-import com.atguigu.gmall.product.service.DataViewService;
-import com.atguigu.gmall.product.service.SkuManagerService;
-import com.atguigu.gmall.product.service.SpuManagerService;
+import com.atguigu.gmall.product.service.*;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +24,18 @@ public class ProductApiController {
 
     private final DataViewService dataViewService;
 
+    private final BaseTrademarkService trademarkService;
+
+    /**
+     * 根据品牌id查询品牌信息
+     * @param tmId
+     * @return
+     */
+    @GetMapping("/getTrademark/{tmId}")
+    @ApiOperation("根据品牌id查询品牌信息")
+    public BaseTrademark getTrademark(@PathVariable("tmId") Long tmId) {
+        return trademarkService.getById(tmId);
+    }
     /**
      * 获取全部分类信息
      * @return

@@ -21,6 +21,14 @@ import java.util.Map;
 public interface ProductFeignClient {
 
     /**
+     * 根据品牌id查询品牌信息
+     * @param tmId
+     * @return
+     */
+    @GetMapping("/api/product/inner/getTrademark/{tmId}")
+    @ApiOperation("根据品牌id查询品牌信息")
+    public BaseTrademark getTrademark(@PathVariable("tmId") Long tmId);
+    /**
      * 获取全部分类信息
      * @return
      */
@@ -47,7 +55,7 @@ public interface ProductFeignClient {
      */
     @GetMapping("/api/product/inner/findSpuPosterBySpuId/{spuId}")
     @ApiOperation("根据spuid获取商品海报")
-    public List<SpuImage> findSpuPosterBySpuId(@PathVariable("spuId") Long spuId);
+    public List<SpuPoster> findSpuPosterBySpuId(@PathVariable("spuId") Long spuId);
 
     /**
      * 根据skuId和spuId查询商品销售属性组合

@@ -12,6 +12,11 @@ import java.util.Map;
 @Component
 public class ProductDegradeFeignClient implements ProductFeignClient {
     @Override
+    public BaseTrademark getTrademark(Long tmId) {
+        return null;
+    }
+
+    @Override
     public List<JSONObject> getBaseCategoryList() {
         return null;
     }
@@ -27,7 +32,7 @@ public class ProductDegradeFeignClient implements ProductFeignClient {
     }
 
     @Override
-    public List<SpuImage> findSpuPosterBySpuId(Long spuId) {
+    public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         return null;
     }
 

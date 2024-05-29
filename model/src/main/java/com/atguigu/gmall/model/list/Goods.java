@@ -48,7 +48,7 @@ public class Goods {
     private String defaultImg;
 
     //  es 中能分词的字段，这个字段数据类型必须是 text！keyword 不分词！
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String title;
 
     @Field(type = FieldType.Double)
@@ -59,13 +59,13 @@ public class Goods {
     private Date createTime; // 新品
 
     @Field(type = FieldType.Long)
-    private Long tmId;
+    private Long tmId; // 品牌id
 
     @Field(type = FieldType.Keyword)
-    private String tmName;
+    private String tmName; // 品牌名称
 
     @Field(type = FieldType.Keyword)
-    private String tmLogoUrl;
+    private String tmLogoUrl; // 品牌logo
 
     @Field(type = FieldType.Long)
     private Long category1Id;

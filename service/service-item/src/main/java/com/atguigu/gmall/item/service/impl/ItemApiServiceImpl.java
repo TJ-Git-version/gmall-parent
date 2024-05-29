@@ -3,6 +3,7 @@ package com.atguigu.gmall.item.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.item.service.ItemApiService;
+import com.atguigu.gmall.list.client.ListFeignClient;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -25,6 +26,9 @@ public class ItemApiServiceImpl implements ItemApiService {
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private ListFeignClient listFeignClient;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -93,16 +97,21 @@ public class ItemApiServiceImpl implements ItemApiService {
 
         // 获取spu海报信息 spuPosterList
         CompletableFuture<Void> spuPosterListCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync(skuInfo -> {
-            List<SpuImage> spuPosterList = productFeignClient.findSpuPosterBySpuId(skuInfo.getSpuId());
+            List<SpuPoster> spuPosterList = productFeignClient.findSpuPosterBySpuId(skuInfo.getSpuId());
             itemMap.put("spuPosterList", spuPosterList);
         }, executor);
+
+        // 更新商品热度排名记录
+        CompletableFuture<Void> hotScoreCompletableFuture = CompletableFuture.runAsync(() -> {
+            listFeignClient.incrHotScore(skuId);
+        });
 
         // 等待所有任务完成
         CompletableFuture.allOf(
                 skuInfoCompletableFuture, skuPriceCompletableFuture,
                 skuAttrListCompletableFuture, spuSaleAttrListCompletableFuture,
                 categoryViewCompletableFuture, skuValueIdsMapCompletableFuture,
-                spuPosterListCompletableFuture
+                spuPosterListCompletableFuture,hotScoreCompletableFuture
         ).join();
         return itemMap;
     }

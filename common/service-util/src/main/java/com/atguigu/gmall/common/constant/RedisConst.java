@@ -8,7 +8,6 @@ public class RedisConst {
 
     public static final String SKUKEY_PREFIX = "sku:"; // sku:10001:info
     public static final String SKUKEY_SUFFIX = ":info"; // sku:10001:info
-
     public static final String SKUKEY_PRICE_PREFIX = "skuPrice:"; // sku:10001:info
     //单位：秒
     public static final long SKUKEY_TIMEOUT = 24 * 60 * 60; // 1天
@@ -41,6 +40,15 @@ public class RedisConst {
 
     // sku 布隆过滤器key
     public static final String SKU_BLOOM_FILTER = "sku:bloom:filter"; // sku:bloomfilter
+
+    // 商品热度排名记录key
+    public static final String SKU_HOT_SCORE_KEY = "hotscore";
+
+    // 商品热度排名记录达到阈值后，同步数据到es中
+    public static final int SKU_HOT_SCORE_THRESHOLD = 10;
+
+    // 商品详情页缓存key
+    public static final String SKU_INFO_KEY_PREFIX = "skuinfo:"; // sku:10001:info
 
 
 }
