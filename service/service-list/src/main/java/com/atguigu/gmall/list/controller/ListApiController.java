@@ -2,16 +2,18 @@ package com.atguigu.gmall.list.controller;
 
 import com.atguigu.gmall.common.execption.GmallException;
 import com.atguigu.gmall.common.result.Result;
-import com.atguigu.gmall.list.service.GoodsService;
+import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.Goods;
+import com.atguigu.gmall.model.list.SearchParam;
+import com.atguigu.gmall.model.list.SearchResponseVo;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/list")
@@ -21,7 +23,14 @@ public class ListApiController {
 
     private final ElasticsearchRestTemplate esRestTemplate;
 
-    private final GoodsService goodsService;
+    private final SearchService searchService;
+
+    @PostMapping
+    @ApiOperation("搜索接口")
+    public Result<SearchResponseVo> searchList(@RequestBody SearchParam searchParam) {
+        SearchResponseVo searchResponseVo = searchService.searchList(searchParam);
+        return Result.ok(searchResponseVo);
+    }
 
     /**
      * 商品热度排名增加接口
@@ -30,7 +39,7 @@ public class ListApiController {
     @GetMapping("/inner/incrHotScore/{skuId}")
     @ApiOperation("商品热度排名增加api")
     public Result<Void> incrHotScore(@PathVariable Long skuId) {
-        goodsService.incrHotScore(skuId);
+        searchService.incrHotScore(skuId);
         return Result.ok();
     }
     /**
@@ -39,7 +48,7 @@ public class ListApiController {
     @GetMapping("/inner/lowerGoods/{skuId}")
     @ApiOperation("商品下架api")
     public Result<Void> lowerGoods(@PathVariable Long skuId) {
-        goodsService.lowerGoods(skuId);
+        searchService.lowerGoods(skuId);
         return Result.ok();
     }
 
@@ -49,7 +58,7 @@ public class ListApiController {
     @GetMapping("/inner/upperGoods/{skuId}")
     @ApiOperation("商品上架api")
     public Result<Goods> upperGoods(@PathVariable Long skuId) {
-        return Result.ok(goodsService.upperGoods(skuId));
+        return Result.ok(searchService.upperGoods(skuId));
     }
 
     /**
