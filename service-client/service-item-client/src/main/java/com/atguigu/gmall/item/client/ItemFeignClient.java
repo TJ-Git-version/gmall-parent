@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Map;
 
-@FeignClient(value = "service-item", fallback = ItemDegradeFeignClient.class)
+@FeignClient(value = "service-item", path = "/api/item", fallback = ItemDegradeFeignClient.class)
 public interface ItemFeignClient {
 
-    @GetMapping("/api/item/{skuId}")
+    @GetMapping("/{skuId}")
     public Result<Map<String, Object>> getItemBySkuId(@PathVariable("skuId") Long skuId);
 
 }
