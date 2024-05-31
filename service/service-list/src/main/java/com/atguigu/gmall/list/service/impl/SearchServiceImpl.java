@@ -11,10 +11,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.search.TotalHits;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -23,18 +21,16 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedLongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.SortOrder;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RedissonClient;
@@ -84,19 +80,17 @@ public class SearchServiceImpl implements SearchService {
     public SearchResponseVo searchList(SearchParam searchParam) {
         // 封装查询条件
         SearchRequest searchRequest = this.buildSearchQueryDsl(searchParam);
-
         // 执行查询
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
 
         // 封装响应实体类信息
-        SearchResponseVo searchResponseVo = this.buildSearchResponseVo(searchResponse);
+        SearchResponseVo searchResponseVo = this.parseSearchResponseVo(searchResponse);
         // 当前页
         searchResponseVo.setPageNo(searchParam.getPageNo());
         // 每页大小
         searchResponseVo.setPageSize(searchParam.getPageSize());
         // 总页数
         searchResponseVo.setTotalPages((searchResponseVo.getTotal() + searchParam.getPageSize() - 1) / searchParam.getPageSize());
-
         return searchResponseVo;
     }
 
@@ -147,9 +141,9 @@ public class SearchServiceImpl implements SearchService {
                     BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
                     // 构建子查询中的过滤条件
                     BoolQueryBuilder suQueryBuilder = QueryBuilders.boolQuery();
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrId", propArr[0]));
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrName", propArr[1]));
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrValueId", propArr[2]));
+                    suQueryBuilder.must(QueryBuilders.termQuery("attrs.attrId", propArr[0]));
+                    suQueryBuilder.must(QueryBuilders.termQuery("attrs.attrValue", propArr[1]));
+                    suQueryBuilder.must(QueryBuilders.termQuery("attrs.attrName", propArr[2]));
                     // 构造nested查询
                     queryBuilder.must().add(QueryBuilders.nestedQuery("attrs", suQueryBuilder, ScoreMode.None));
                     // 添加到整个过滤对象中
@@ -178,10 +172,11 @@ public class SearchServiceImpl implements SearchService {
         //  根据商品的热度和价格进行排序
         // 排序规则
         // 1:hotScore 2:price   1：综合排序/热度  2：价格  order=1:desc
+
+        String sortOrder = "hotScore";
         if (searchParam.getOrder() != null) {
             String[] orderArr = searchParam.getOrder().split(":");
-            if (orderArr != null && orderArr.length == 2) {
-                String sortOrder = "";
+            if (orderArr.length == 2) {
                 switch (orderArr[0]) {
                     case "1":
                         sortOrder = "hotScore";
@@ -190,11 +185,12 @@ public class SearchServiceImpl implements SearchService {
                         sortOrder = "price";
                         break;
                 }
-                searchBuilder.sort(sortOrder, SortOrder.DESC.equals(orderArr[1]) ? SortOrder.DESC : SortOrder.ASC);
+                searchBuilder.sort(sortOrder, SortOrder.DESC.toString().equals(orderArr[1]) ? SortOrder.DESC : SortOrder.ASC);
+            } else {
+                searchBuilder.sort(sortOrder, SortOrder.DESC);
             }
-        } else {
-            searchBuilder.sort("hotScore", SortOrder.DESC);
         }
+
 
         // 查询结果高亮显示
         HighlightBuilder highlightBuilder = new HighlightBuilder();
@@ -220,11 +216,11 @@ public class SearchServiceImpl implements SearchService {
      * @param searchResponse
      * @return
      */
-    private SearchResponseVo buildSearchResponseVo(SearchResponse searchResponse) {
+    private SearchResponseVo parseSearchResponseVo(SearchResponse searchResponse) {
         SearchResponseVo searchResponseVo = new SearchResponseVo();
         // 聚合后的品牌列表
         Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().getAsMap();
-        ParsedStringTerms tmTerms = (ParsedStringTerms) aggregationMap.get("tmIdAgg");
+        ParsedLongTerms tmTerms = (ParsedLongTerms) aggregationMap.get("tmIdAgg");
         if (CollectionUtils.isNotEmpty(tmTerms.getBuckets())) {
             List<SearchResponseTmVo> searchResponseTmVoList = tmTerms.getBuckets().stream().map(term -> {
                 SearchResponseTmVo searchResponseTmVo = new SearchResponseTmVo();

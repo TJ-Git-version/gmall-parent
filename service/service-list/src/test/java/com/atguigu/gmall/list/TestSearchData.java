@@ -64,71 +64,71 @@ public class TestSearchData {
     private SearchRequest buildSearchQueryDsl(SearchParam searchParam) {
         SearchRequest searchRequest = new SearchRequest("goods");
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
-        // 查询条件
+        // // 查询条件
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotBlank(searchParam.getKeyword())) {
             MatchQueryBuilder keywordQueryBuilder = QueryBuilders.matchQuery("title", searchParam.getKeyword()).operator(Operator.AND);
             boolQueryBuilder.must(keywordQueryBuilder);
         }
-        // 过滤查询-分类（一级、二级和三级分类）
-        if (searchParam.getCategory1Id() != null) {
-            TermQueryBuilder category1IdQueryBuilder = QueryBuilders.termQuery("category1Id", searchParam.getCategory1Id());
-            boolQueryBuilder.filter().add(category1IdQueryBuilder);
-        }
-        if (searchParam.getCategory2Id() != null) {
-            TermQueryBuilder category2IdQueryBuilder = QueryBuilders.termQuery("category2Id", searchParam.getCategory2Id());
-            boolQueryBuilder.filter().add(category2IdQueryBuilder);
-        }
-        if (searchParam.getCategory3Id() != null) {
-            TermQueryBuilder category3IdQueryBuilder = QueryBuilders.termQuery("category3Id", searchParam.getCategory3Id());
-            boolQueryBuilder.filter().add(category3IdQueryBuilder);
-        }
-        // 过滤查询-商品品牌 2:华为 品牌id:品牌名称
-        String trademark = searchParam.getTrademark();
-        if (StringUtils.isNotBlank(trademark)) {
-            String[] trademarkArr = trademark.split(",");
-            if (trademarkArr != null && trademarkArr.length == 2) {
-                boolQueryBuilder.filter().add(QueryBuilders.termQuery("tmId", trademarkArr[0]));
-                boolQueryBuilder.filter().add(QueryBuilders.termQuery("tmName", trademarkArr[1]));
-            }
-        }
-        // 嵌套查询-平台属性值   prop=23:4G:运行内存    平台属性Id 平台属性值名称 平台属性名
-        String[] props = searchParam.getProps();
-        if (props != null && props.length > 0) {
-            for (String prop : props) {
-                String[] propArr = prop.split(":");
-                if (propArr != null && propArr.length == 3) {
-                    // 构建嵌套查询
-                    BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
-                    // 构建子查询中的过滤条件
-                    BoolQueryBuilder suQueryBuilder = QueryBuilders.boolQuery();
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrId", propArr[0]));
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrName", propArr[1]));
-                    suQueryBuilder.must(QueryBuilders.termQuery("attrValueId", propArr[2]));
-                    // 构造nested查询
-                    queryBuilder.must().add(QueryBuilders.nestedQuery("attrs", suQueryBuilder, ScoreMode.None));
-                    // 添加到整个过滤对象中
-                    boolQueryBuilder.filter().add(queryBuilder);
-                }
-            }
-        }
-        searchBuilder.query(boolQueryBuilder);
-
-        // 聚合条件
-        // 聚合商品品牌数据
-        TermsAggregationBuilder tmAggregationBuilder = AggregationBuilders.terms("tmIdAgg").field("tmId")
-                .subAggregation(AggregationBuilders.terms("tmNameAgg").field("tmName"))
-                .subAggregation(AggregationBuilders.terms("tmLogoUrlAgg").field("tmLogoUrl"));
-        searchBuilder.aggregation(tmAggregationBuilder);
-        NestedAggregationBuilder nestedAggregationBuilder = AggregationBuilders.nested("attrsAgg", "attrs")
-                .subAggregation(AggregationBuilders.terms("attrIdAgg").field("attrs.attrId").size(10));
-        // 聚合平台属性数据
-        TermsAggregationBuilder attrIdAggregationBuilder = AggregationBuilders.terms("attrIdAgg").field("attrs.attrId").size(10);
-        NestedAggregationBuilder attrsAggregationBuilder = AggregationBuilders.nested("attrsAgg", "attrs")
-                .subAggregation(attrIdAggregationBuilder);
-        attrIdAggregationBuilder.subAggregation(AggregationBuilders.terms("attrNameAgg").field("attrs.attrName").size(10))
-                .subAggregation(AggregationBuilders.terms("attrValueAgg").field("attrs.attrValue").size(10));
-        searchBuilder.aggregation(attrsAggregationBuilder);
+        // // 过滤查询-分类（一级、二级和三级分类）
+        // if (searchParam.getCategory1Id() != null) {
+        //     TermQueryBuilder category1IdQueryBuilder = QueryBuilders.termQuery("category1Id", searchParam.getCategory1Id());
+        //     boolQueryBuilder.filter().add(category1IdQueryBuilder);
+        // }
+        // if (searchParam.getCategory2Id() != null) {
+        //     TermQueryBuilder category2IdQueryBuilder = QueryBuilders.termQuery("category2Id", searchParam.getCategory2Id());
+        //     boolQueryBuilder.filter().add(category2IdQueryBuilder);
+        // }
+        // if (searchParam.getCategory3Id() != null) {
+        //     TermQueryBuilder category3IdQueryBuilder = QueryBuilders.termQuery("category3Id", searchParam.getCategory3Id());
+        //     boolQueryBuilder.filter().add(category3IdQueryBuilder);
+        // }
+        // // 过滤查询-商品品牌 2:华为 品牌id:品牌名称
+        // String trademark = searchParam.getTrademark();
+        // if (StringUtils.isNotBlank(trademark)) {
+        //     String[] trademarkArr = trademark.split(",");
+        //     if (trademarkArr != null && trademarkArr.length == 2) {
+        //         boolQueryBuilder.filter().add(QueryBuilders.termQuery("tmId", trademarkArr[0]));
+        //         boolQueryBuilder.filter().add(QueryBuilders.termQuery("tmName", trademarkArr[1]));
+        //     }
+        // }
+        // // 嵌套查询-平台属性值   prop=23:4G:运行内存    平台属性Id 平台属性值名称 平台属性名
+        // String[] props = searchParam.getProps();
+        // if (props != null && props.length > 0) {
+        //     for (String prop : props) {
+        //         String[] propArr = prop.split(":");
+        //         if (propArr != null && propArr.length == 3) {
+        //             // 构建嵌套查询
+        //             BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+        //             // 构建子查询中的过滤条件
+        //             BoolQueryBuilder suQueryBuilder = QueryBuilders.boolQuery();
+        //             suQueryBuilder.must(QueryBuilders.termQuery("attrId", propArr[0]));
+        //             suQueryBuilder.must(QueryBuilders.termQuery("attrName", propArr[1]));
+        //             suQueryBuilder.must(QueryBuilders.termQuery("attrValueId", propArr[2]));
+        //             // 构造nested查询
+        //             queryBuilder.must().add(QueryBuilders.nestedQuery("attrs", suQueryBuilder, ScoreMode.None));
+        //             // 添加到整个过滤对象中
+        //             boolQueryBuilder.filter().add(queryBuilder);
+        //         }
+        //     }
+        // }
+        // searchBuilder.query(boolQueryBuilder);
+        //
+        // // 聚合条件
+        // // 聚合商品品牌数据
+        // TermsAggregationBuilder tmAggregationBuilder = AggregationBuilders.terms("tmIdAgg").field("tmId")
+        //         .subAggregation(AggregationBuilders.terms("tmNameAgg").field("tmName"))
+        //         .subAggregation(AggregationBuilders.terms("tmLogoUrlAgg").field("tmLogoUrl"));
+        // searchBuilder.aggregation(tmAggregationBuilder);
+        // NestedAggregationBuilder nestedAggregationBuilder = AggregationBuilders.nested("attrsAgg", "attrs")
+        //         .subAggregation(AggregationBuilders.terms("attrIdAgg").field("attrs.attrId").size(10));
+        // // 聚合平台属性数据
+        // TermsAggregationBuilder attrIdAggregationBuilder = AggregationBuilders.terms("attrIdAgg").field("attrs.attrId").size(10);
+        // NestedAggregationBuilder attrsAggregationBuilder = AggregationBuilders.nested("attrsAgg", "attrs")
+        //         .subAggregation(attrIdAggregationBuilder);
+        // attrIdAggregationBuilder.subAggregation(AggregationBuilders.terms("attrNameAgg").field("attrs.attrName").size(10))
+        //         .subAggregation(AggregationBuilders.terms("attrValueAgg").field("attrs.attrValue").size(10));
+        // searchBuilder.aggregation(attrsAggregationBuilder);
         //  根据商品的热度和价格进行排序
         // 排序规则
         // 1:hotScore 2:price   1：综合排序/热度  2：价格  order=1:desc
@@ -145,25 +145,26 @@ public class TestSearchData {
                         break;
                 }
                 searchBuilder.sort(sortOrder, SortOrder.DESC.equals(orderArr[1]) ? SortOrder.DESC : SortOrder.ASC);
+            } else {
+                searchBuilder.sort("hotScore", SortOrder.DESC);
             }
-        } else {
-            searchBuilder.sort("hotScore", SortOrder.DESC);
         }
 
-        // 查询结果高亮显示
-        HighlightBuilder highlightBuilder = new HighlightBuilder();
-        highlightBuilder.field("title")
-                .preTags("<span style='color:red'>")
-                .postTags("</span>");
-        searchBuilder.highlighter(highlightBuilder);
-        // 分页查询
-        int pageNum = (searchParam.getPageNo() - 1) * searchParam.getPageSize();
-        searchBuilder.from(pageNum);
-        searchBuilder.size(searchParam.getPageSize());
-        // 列表数据-过滤多余字段
-        String[] excludes = {"id", "title", "defaultImg", "price", "hotScore"};
-        searchBuilder.fetchSource(excludes, null);
+        // // 查询结果高亮显示
+        // HighlightBuilder highlightBuilder = new HighlightBuilder();
+        // highlightBuilder.field("title")
+        //         .preTags("<span style='color:red'>")
+        //         .postTags("</span>");
+        // searchBuilder.highlighter(highlightBuilder);
+        // // 分页查询
+        // int pageNum = (searchParam.getPageNo() - 1) * searchParam.getPageSize();
+        // searchBuilder.from(pageNum);
+        // searchBuilder.size(searchParam.getPageSize());
+        // // 列表数据-过滤多余字段
+        // String[] excludes = {"id", "title", "defaultImg", "price", "hotScore"};
+        // searchBuilder.fetchSource(excludes, null);
         searchRequest.source(searchBuilder);
+        System.out.println(searchBuilder);
         return searchRequest;
     }
 
