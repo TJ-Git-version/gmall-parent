@@ -62,7 +62,7 @@
         <div class="bread">
             <ul class="fl sui-breadcrumb">
                 <li>
-                    <a href="#">全部结果</a>
+                    <a href="#">全部结果 ></a>
                 </li>
                 <li  class="active">
                     <span th:text="${searchParam.keyword}"></span>
@@ -71,12 +71,12 @@
             <ul class="fl sui-tag">
                 <!--品牌的面包屑-->
                 <li th:if="${searchParam.trademark != null}" class="with-x">
-                    <span th:text="${trademarkParam}"></span>
+                    <span th:utext="${trademarkParam}"></span>
                     <a th:href="@{${#strings.replace(urlParam+'&order='+searchParam.order,'trademark='+searchParam.trademark,'')}}">×</a>
                 </li>
                 <!--平台属性面包屑-->
                 <li th:if="${searchParam.props != null}" th:each="prop : ${propsParamList}" class="with-x">
-                    <span th:text="${prop.attrName}+'：'+${prop.attrValue}"></span>
+                    <span th:utext="${prop.attrName}+'：'+${prop.attrValue}"></span>
                     <a th:href="@{${#strings.replace(urlParam+'&order='+searchParam.order,'props='+prop.attrId+':'+prop.attrValue+':'+prop.attrName,'')}}">×</a>
                 </li>
             </ul>
@@ -84,7 +84,7 @@
 
         <!--selector-->
         <div class="clearfix selector">
-            <div class="type-wrap logo" th:if="${searchParam.trademark == null}">
+            <div class="type-wrap logo" th:if="${searchParam.trademark == null && trademarkList != null}">
                 <div class="fl key brand">品牌</div>
                 <div class="value logos">
                     <ul class="logo-list">
