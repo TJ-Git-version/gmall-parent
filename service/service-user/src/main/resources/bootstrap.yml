@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: service-user
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.136.132:8848
+      config:
+        server-addr: 192.168.136.132:8848
+        file-extension: yaml
+        prefix: ${spring.application.name}
+        shared-configs:
+          - data-id: common.yaml
+            refresh: true

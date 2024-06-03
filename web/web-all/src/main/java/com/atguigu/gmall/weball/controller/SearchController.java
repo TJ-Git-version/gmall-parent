@@ -26,15 +26,6 @@ public class SearchController {
      */
     @GetMapping("/list.html")
     public String list(SearchParam searchParam, Model model) {
-        // 关键字查询和分类是互斥的，且至少有一个必须有
-        if (StringUtils.isBlank(searchParam.getKeyword()) && (Objects.isNull(searchParam.getCategory1Id()) || Objects.isNull(searchParam.getCategory2Id()) || Objects.isNull(searchParam.getCategory3Id()))) {
-            model.addAttribute("searchParam", searchParam);
-            model.addAttribute("urlParam", "list.html");
-            model.addAttribute("orderMap", this.makeOrderParam(searchParam));
-            this.makeCrumbParam(searchParam, model);
-            return "list/index";
-        }
-
         Result<Map<String, Object>> result = listFeignClient.searchList(searchParam);
         // 返回检索结果
         model.addAllAttributes(result.getData());
