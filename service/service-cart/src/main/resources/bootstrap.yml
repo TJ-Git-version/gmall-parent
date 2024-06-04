@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: service-cart
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.136.132:8848
+      config:
+        server-addr: 192.168.136.132:8848
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        prefix: ${spring.application.name}
+        refresh-enabled: true # 开启自动刷新
+        shared-configs:
+          - data-id: common.yaml
+            refresh: true
