@@ -37,6 +37,12 @@
 <!--            <artifactId>service-user-client</artifactId>-->
 <!--            <version>1.0-SNAPSHOT</version>-->
 <!--        </dependency>-->
+        <!-- 引入service-cart-client feign 统一远程调用接口-->
+        <dependency>
+            <groupId>com.atguigu.gmall</groupId>
+            <artifactId>service-cart-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
