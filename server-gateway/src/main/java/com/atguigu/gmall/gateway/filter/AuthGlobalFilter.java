@@ -22,13 +22,13 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -93,14 +93,47 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                 }
             }
         }
+        // 获取临时用户id（未登录状态下）
+        String tempUserId = getTempUserId(request);
         // 封装userId到请求头中，后续的服务调用可以获取userId信息
-        if (StringUtils.isNotBlank(userId)) {
-            request.mutate().header("userId", userId).build();
+        if (StringUtils.isNotBlank(userId) || StringUtils.isNotBlank(tempUserId)) {
+            if (StringUtils.isNotBlank(userId)) {
+                request.mutate().header("userId", userId).build();
+            }
+            if (StringUtils.isNotBlank(tempUserId)) {
+                request.mutate().header("userTempId", tempUserId).build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         }
         // 放行请求
         return chain.filter(exchange);
 
+    }
+
+    /**
+     * 获取临时用户id（未登录状态下）
+     * @param request
+     * @param response
+     * @return
+     */
+    private String getTempUserId(ServerHttpRequest request) {
+        // 从请求头中获取临时用户id
+        HttpHeaders headers = request.getHeaders();
+        String userTempId = null;
+        if (headers != null) {
+            userTempId = headers.getFirst("userTempId");
+        }
+        // 如果请求头中的临时id为空，则从cookie中获取临时用户id
+        if (userTempId == null) {
+            MultiValueMap<String, HttpCookie> cookies = request.getCookies();
+            if (!CollectionUtils.isEmpty(cookies)) {
+                HttpCookie cookie = cookies.getFirst("userTempId");
+                if (cookie != null) {
+                    userTempId = cookie.getValue();
+                }
+            }
+        }
+        return userTempId;
     }
 
     /**

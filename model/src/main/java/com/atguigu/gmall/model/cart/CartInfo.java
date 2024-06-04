@@ -36,6 +36,9 @@ public class CartInfo extends BaseEntity {
     @ApiModelProperty(value = "sku名称 (冗余)")
     private String skuName;
 
+    /**
+     * 是否选中 0未选中 1选中
+     */
     @ApiModelProperty(value = "isChecked")
     private Integer isChecked = 1;
 
