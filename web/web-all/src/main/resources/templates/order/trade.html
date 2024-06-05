@@ -133,7 +133,7 @@
 		<div class="order-summary">
 			<div class="static fr">
 				<div class="list">
-					<span><i class="number" th:text="${totalNum}">1</i>件商品，总商品金额</span>
+					<span><i class="number" th:text="${totalNum}">1</i>&nbsp;件商品，总商品金额</span>
 					<em class="allprice" th:text="'￥'+${totalAmount}">¥0</em>
 				</div>
 				<div class="list">
@@ -268,7 +268,7 @@
 
         methods: {
             init() {
-                debugger
+                // debugger
                 this.userAddressList.forEach((item) => {
                     item.selected = 0
                     if(item.isDefault == 1) {
@@ -286,7 +286,8 @@
                     if (response.data.code == 200) {
                         window.location.href = 'http://payment.gmall.com/pay.html?orderId=' + response.data.data
                     } else {
-                        alert(response.data.message)
+						console.log(response.data.data)
+                        alert(response.data.data)
                     }
 
                 })

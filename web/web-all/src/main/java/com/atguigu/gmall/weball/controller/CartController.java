@@ -1,6 +1,5 @@
 package com.atguigu.gmall.weball.controller;
 
-import com.atguigu.gmall.cart.client.CartFeignClient;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartFeignClient cartFeignClient;
-
     private final ProductFeignClient productFeignClient;
 
 
@@ -24,8 +21,6 @@ public class CartController {
     public String cartList() {
         return "cart/index";
     }
-
-    // addCart.html?skuId=22&skuNum=1&sourceType=query
 
     /**
      * 添加购物车调整成功页面

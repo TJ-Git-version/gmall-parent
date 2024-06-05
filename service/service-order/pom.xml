@@ -5,42 +5,35 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atguigu.gmall</groupId>
-        <artifactId>web</artifactId>
+        <artifactId>service</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>web-all</artifactId>
-
+    <artifactId>service-order</artifactId>
 
     <dependencies>
-        <!-- 引入service-item-client feign 统一远程调用接口-->
-        <dependency>
-            <groupId>com.atguigu.gmall</groupId>
-            <artifactId>service-item-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <!-- 引入service-product-client feign 统一远程调用接口-->
         <dependency>
             <groupId>com.atguigu.gmall</groupId>
             <artifactId>service-product-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- 引入service-list-client feign 统一远程调用接口-->
+        <!-- 引入service-user-client feign 统一远程调用接口-->
         <dependency>
             <groupId>com.atguigu.gmall</groupId>
-            <artifactId>service-list-client</artifactId>
+            <artifactId>service-user-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- 引入service-order-client feign 统一远程调用接口-->
+        <!-- 引入service-cart-client feign 统一远程调用接口-->
         <dependency>
             <groupId>com.atguigu.gmall</groupId>
-            <artifactId>service-order-client</artifactId>
+            <artifactId>service-cart-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
     <build>
-        <finalName>web-all</finalName>
+        <finalName>service-order</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
