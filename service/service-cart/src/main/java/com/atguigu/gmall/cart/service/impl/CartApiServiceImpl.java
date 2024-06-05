@@ -1,12 +1,14 @@
 package com.atguigu.gmall.cart.service.impl;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.spring.util.ObjectUtils;
 import com.atguigu.gmall.cart.service.CartApiService;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.execption.GmallException;
 import com.atguigu.gmall.common.util.AuthContextHolder;
 import com.atguigu.gmall.common.util.DateUtil;
 import com.atguigu.gmall.model.cart.CartInfo;
+import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.apache.commons.lang.StringUtils;
@@ -16,9 +18,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("all")
@@ -30,6 +33,35 @@ public class CartApiServiceImpl implements CartApiService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    /**
+     * 获取当前用户勾选的购物车列表
+     * @param request
+     * @return
+     */
+    @Override
+    public List<CartInfo> getCartCheckedList(String userId) {
+        // 获取购物车列表
+        List<CartInfo> cartInfoList = null;
+        // 总数量
+        Integer totalNum = 0;
+        // 总金额
+        BigDecimal totalAmount = new BigDecimal("0");
+        if (StringUtils.isNotBlank(userId)) {
+            // 从redis中获取购物车列表
+            BoundHashOperations<String, String, CartInfo> boundHashOps = redisTemplate.boundHashOps(getCartKey(userId));
+            if (!Objects.isNull(boundHashOps)) {
+                cartInfoList = boundHashOps.values();
+                if (CollectionUtils.isNotEmpty(cartInfoList)) {
+                    // 过滤掉未勾选的商品
+                    cartInfoList = cartInfoList
+                            .stream()
+                            .filter(cartInfo -> cartInfo.getIsChecked() == 1)
+                            .collect(Collectors.toList());
+                    }
+            }
+        }
+        return cartInfoList;
+    }
 
     /**
      * 取消勾选购物车中的商品
@@ -39,10 +71,9 @@ public class CartApiServiceImpl implements CartApiService {
      */
     @Override
     public void checkCart(Long skuId, Integer isChecked, HttpServletRequest request) {
-        String userId = AuthContextHolder.getUserTempId(request);
-        if (StringUtils.isNotBlank(userId)) {
-            userId = AuthContextHolder.getUserId(request);
-        }
+        // 获取登录用户id
+        String userId = getUserId(request);
+        // 获取购物车key
         String cartKey = getCartKey(userId);
         BoundHashOperations<String, String, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
         if (boundHashOps.hasKey(skuId.toString())) {
@@ -53,6 +84,7 @@ public class CartApiServiceImpl implements CartApiService {
         }
     }
 
+
     /**
      * 删除购物车中的商品
      * @param skuId
@@ -60,12 +92,7 @@ public class CartApiServiceImpl implements CartApiService {
      */
     @Override
     public void deleteCart(Long skuId, HttpServletRequest request) {
-        // 获取临时用户id
-        String userId = AuthContextHolder.getUserTempId(request);
-        // 获取用户id
-        if (StringUtils.isNotBlank(userId)) {
-            userId = AuthContextHolder.getUserId(request);
-        }
+        String userId = getUserId(request);
         String cartKey = getCartKey(userId);
         // 判断购物车中是否已经存在该商品，如果存在，则删除
         BoundHashOperations<String, String, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
@@ -73,6 +100,21 @@ public class CartApiServiceImpl implements CartApiService {
         if (boundHashOps.hasKey(skuId.toString())) {
             boundHashOps.delete(skuId.toString());
         }
+    }
+
+    /**
+     * 优先获取登录用户id，如果不存在，则获取临时用户id
+     * @param request
+     * @return
+     */
+    private static String getUserId(HttpServletRequest request) {
+        // 获取临时用户id
+        String userId = AuthContextHolder.getUserId(request);
+        // 获取用户id
+        if (StringUtils.isNotBlank(userId)) {
+            userId = AuthContextHolder.getUserTempId(request);
+        }
+        return userId;
     }
 
 

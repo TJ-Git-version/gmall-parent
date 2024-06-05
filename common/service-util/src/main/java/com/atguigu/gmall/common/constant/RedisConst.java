@@ -21,6 +21,7 @@ public class RedisConst {
     public static final String SKULOCK_SUFFIX = ":lock"; // sku:10001:lock
 
     public static final String USER_KEY_PREFIX = "user:"; // user:10001:info
+    public static final String ORDER_NO_SUFFIX = "tradeno:"; // user:10001:info
     public static final String USER_CART_KEY_SUFFIX = ":cart"; // user:10001:cart
     public static final long USER_CART_EXPIRE = 60 * 60 * 24 * 30;  // 30天
 

@@ -5,6 +5,7 @@ import com.atguigu.gmall.model.cart.CartInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 public interface CartApiService {
 
@@ -37,5 +38,12 @@ public interface CartApiService {
      * @param request
      */
     void checkCart(Long skuId, Integer isChecked, HttpServletRequest request);
+
+    /**
+     * 获取当前用户勾选的购物车列表
+     * @param userId
+     * @return
+     */
+    List<CartInfo> getCartCheckedList(String userId);
 
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 购物车API接口
@@ -20,7 +22,16 @@ public class CartApiController {
 
     private final CartApiService cartApiService;
 
-    ///api/cart/checkCart/21/0
+    /**
+     * 获取当前用户勾选的购物车列表
+     * @return
+     */
+    @GetMapping("/inner/getCartCheckedList/{userId}")
+    @ApiOperation("获取当前用户勾选的购物车列表")
+    public List<CartInfo> getCartCheckedList(@PathVariable String userId) {
+        return cartApiService.getCartCheckedList(userId);
+    }
+
     /**
      * 取消勾选购物车中的商品
      * @param skuId 商品id
