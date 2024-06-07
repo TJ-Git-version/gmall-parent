@@ -24,6 +24,7 @@
         <module>web</module>
         <module>service-client/service-list-client</module>
         <module>ware-manage</module>
+        <module>common/rabbit-util</module>
     </modules>
 
     <!--定义jar包的版本号-->
