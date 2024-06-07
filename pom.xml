@@ -23,6 +23,7 @@
         <module>service-client</module>
         <module>web</module>
         <module>service-client/service-list-client</module>
+        <module>ware-manage</module>
     </modules>
 
     <!--定义jar包的版本号-->
@@ -39,6 +40,7 @@
         <redisson.version>3.15.3</redisson.version>
         <pool2.version>2.6.0</pool2.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <hutool.version>5.8.26</hutool.version>
     </properties>
 
     <!--配置dependencyManagement锁定依赖的版本 并不是实际的依赖。-->
@@ -114,8 +116,12 @@
                 <artifactId>httpclient</artifactId>
                 <version>${httpclient.version}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
         </dependencies>
-
     </dependencyManagement>
 
 </project>
