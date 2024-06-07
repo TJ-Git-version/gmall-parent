@@ -132,6 +132,9 @@ public class OrderInfo extends BaseEntity {
     @TableField(exist = false)
     private List<OrderDetailVo> orderDetailVoList;
 
+    /**
+     * 订单状态名称
+     */
     @TableField(exist = false)
     private String orderStatusName;
 

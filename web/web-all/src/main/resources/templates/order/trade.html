@@ -282,12 +282,14 @@
 
             submitOrder() {
                 trade.submitOrder(this.order, this.tradeNo).then(response => {
+					console.log("Xxx")
                     // debugger
                     if (response.data.code == 200) {
                         window.location.href = 'http://payment.gmall.com/pay.html?orderId=' + response.data.data
                     } else {
-						console.log(response.data.data)
-                        alert(response.data.data)
+						this.init();
+						alert(response.data.data)
+						// window.location.reload();
                     }
 
                 })

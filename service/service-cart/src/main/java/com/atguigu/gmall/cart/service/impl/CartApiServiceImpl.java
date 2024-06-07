@@ -35,6 +35,7 @@ public class CartApiServiceImpl implements CartApiService {
 
     /**
      * 获取当前用户勾选的购物车列表
+     *
      * @param request
      * @return
      */
@@ -55,9 +56,12 @@ public class CartApiServiceImpl implements CartApiService {
                     // 过滤掉未勾选的商品
                     cartInfoList = cartInfoList
                             .stream()
-                            .filter(cartInfo -> cartInfo.getIsChecked() == 1)
+                            .filter(cartInfo -> {
+                                cartInfo.setSkuPrice(productFeignClient.getSkuPrice(cartInfo.getSkuId()));
+                                return cartInfo.getIsChecked() == 1;
+                            })
                             .collect(Collectors.toList());
-                    }
+                }
             }
         }
         return cartInfoList;
@@ -65,6 +69,7 @@ public class CartApiServiceImpl implements CartApiService {
 
     /**
      * 取消勾选购物车中的商品
+     *
      * @param skuId
      * @param isChecked
      * @param request
@@ -87,6 +92,7 @@ public class CartApiServiceImpl implements CartApiService {
 
     /**
      * 删除购物车中的商品
+     *
      * @param skuId
      * @param request
      */
@@ -104,6 +110,7 @@ public class CartApiServiceImpl implements CartApiService {
 
     /**
      * 优先获取登录用户id，如果不存在，则获取临时用户id
+     *
      * @param request
      * @return
      */
@@ -120,6 +127,7 @@ public class CartApiServiceImpl implements CartApiService {
 
     /**
      * 获取购物车列表， 合并登录用户和临时用户购物车商品
+     *
      * @param request
      * @return
      */

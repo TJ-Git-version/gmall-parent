@@ -1,5 +1,7 @@
 package com.atguigu.gmall.order.service.impl;
 
+import cn.hutool.http.Header;
+import cn.hutool.http.HttpRequest;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.atguigu.gmall.cart.client.CartFeignClient;
@@ -15,16 +17,27 @@ import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderManagerService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.atguigu.gmall.user.client.UserFeignClient;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @SuppressWarnings("all")
 public class OrderManagerServiceImpl implements OrderManagerService {
 
@@ -40,9 +53,139 @@ public class OrderManagerServiceImpl implements OrderManagerService {
     private OrderDetailMapper orderDetailMapper;
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    private ThreadPoolExecutor threadPoolExecutor;
+
+    /**
+     * 根据用户id获取订单列表
+     */
+    @Override
+    public IPage<OrderInfo> getMyOrderByUserId(Page<OrderInfo> page, String userId) {
+        // page = orderInfoMapper.selectPageByUserId(page, userId);
+        page = orderInfoMapper.selectOrderInfoByUserId(page, userId);
+        page.getRecords().forEach(orderInfo -> {
+            orderInfo.setOrderStatusName(OrderStatus.getStatusNameByStatus(orderInfo.getOrderStatus()));
+        });
+        return page;
+    }
+
+
+    /**
+     * 校验商品库存是否充足和价格是否正确
+     *
+     * @param orderDetailList
+     * @return
+     */
+    @Override
+    public List<String> checkSkuStockAndPrice(List<OrderDetail> orderDetailList) {
+        if (CollectionUtils.isEmpty(orderDetailList)) {
+            return Collections.emptyList();
+        }
+        AtomicBoolean flag = new AtomicBoolean(true);
+        // 异步校验库存和价格
+        List<CompletableFuture> futureList = new ArrayList<>();
+        // 收集异常信息
+        List<String> errorList = new ArrayList<>();
+        orderDetailList.forEach(orderDetail -> {
+            // TODO 校验库存是否充足
+            CompletableFuture<Void> stockCompletableFuture = CompletableFuture.runAsync(() -> {
+                boolean hasStock = this.checkSkuStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+                if (!hasStock) {
+                    errorList.add("商品" + orderDetail.getSkuName() + "库存不足");
+                }
+            }, threadPoolExecutor);
+            futureList.add(stockCompletableFuture);
+            // TODO 校验价格是否变动
+            CompletableFuture<Void> priceCompletableFuture = CompletableFuture.runAsync(() -> {
+                boolean priceChanged = this.checkSkuPrice(orderDetail.getSkuId(), orderDetail.getOrderPrice());
+                if (!priceChanged) {
+                    errorList.add("商品" + orderDetail.getSkuName() + "价格已变动");
+                }
+            }, threadPoolExecutor);
+            futureList.add(priceCompletableFuture);
+            // TODO 校验优惠券是否可用
+        });
+        CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()])).join();
+        return errorList;
+    }
+
+    @Override
+    public void updateCartCache(String userId) {
+        List<CartInfo> cartCheckedList = cartFeignClient.getCartCheckedList(userId);
+        if (CollectionUtils.isNotEmpty(cartCheckedList)) {
+            BoundHashOperations<String, String, CartInfo> boundHashOps = redisTemplate.boundHashOps(getCartKey(userId));
+            if (Objects.nonNull(boundHashOps)) {
+                cartCheckedList.forEach(cartInfo -> {
+                    boundHashOps.put(cartInfo.getSkuId().toString(), cartInfo);
+                });
+            }
+        }
+    }
+
+
+    /**
+     * 获取缓存购物车key
+     *
+     * @param userId
+     * @return
+     */
+    private String getCartKey(String userId) {
+        return RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX;
+    }
+
+    /**
+     * 校验价格是否变动
+     *
+     * @param skuId
+     * @param orderPrice
+     * @return
+     */
+    private boolean checkSkuPrice(Long skuId, BigDecimal orderPrice) {
+        BigDecimal skuPrice = productFeignClient.getSkuPrice(skuId);
+        return Objects.nonNull(skuPrice) && skuPrice.compareTo(orderPrice) == 0;
+    }
+
+    @Value("${ware.url}")
+    private String wareUrl;
+
+    /**
+     * 校验商品库存是否充足
+     *
+     * @param skuId
+     * @param skuNum
+     * @return
+     */
+    private boolean checkSkuStock(Long skuId, Integer skuNum) {
+        // 构建请求参数
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("skuId", skuId);
+        paramMap.put("num", skuNum);
+        // 链式构建请求
+        String stockResult = HttpRequest.get(wareUrl + "hasStock")
+                .header(Header.USER_AGENT, "GMALL-PROXY")// 头信息，多个头信息多次调用此方法即可
+                .form(paramMap)// 表单内容
+                .timeout(20000)// 超时，毫秒
+                .execute().body();
+        log.info("库存校验结果：{}", stockResult);
+        return "1".equals(stockResult);
+    }
+
+    public static void main(String[] args) {
+        // 构建请求参数
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("skuId", 21);
+        paramMap.put("num", 1);
+        String result2 = HttpRequest.get("http://localhost:9001/hasStock")
+                .header(Header.USER_AGENT, "GMALL-PROXY")// 头信息，多个头信息多次调用此方法即可
+                .form(paramMap)// 表单内容
+                .timeout(20000)// 超时，毫秒
+                .execute().body();
+        System.out.println(result2);
+    }
 
     /**
      * 校验订单交易流水号
+     *
      * @param tradeNo
      * @return
      */
@@ -57,18 +200,23 @@ public class OrderManagerServiceImpl implements OrderManagerService {
 
     /**
      * 删除订单交易流水号
+     *
      * @param tradeNo
      */
     @Override
     public void deleteTradeNo(String tradeNo) {
         redisTemplate.delete(getTradeNoKey(tradeNo));
     }
+
+
     /**
      * 提交订单
+     *
      * @param orderInfo
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long submitOrder(OrderInfo orderInfo) {
         // 1. 保存订单信息
         List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
@@ -94,10 +242,10 @@ public class OrderManagerServiceImpl implements OrderManagerService {
         orderInfoMapper.insert(orderInfo);
         // 2. 保存订单明细信息
         if (CollectionUtils.isNotEmpty(orderDetailList)) {
-             orderDetailList.forEach(orderDetail -> {
-                 orderDetail.setOrderId(orderInfo.getId());
-                 orderDetailMapper.insert(orderDetail);
-             });
+            orderDetailList.forEach(orderDetail -> {
+                orderDetail.setOrderId(orderInfo.getId());
+                orderDetailMapper.insert(orderDetail);
+            });
         }
 
         // 删除redis中购物车中已结算的商品
@@ -107,9 +255,9 @@ public class OrderManagerServiceImpl implements OrderManagerService {
     }
 
 
-
     /**
      * 获取订单描述信息
+     *
      * @param orderDetailList
      * @return
      */
@@ -120,7 +268,7 @@ public class OrderManagerServiceImpl implements OrderManagerService {
             if (tradeBody.length() > 100) {
                 tradeBody = tradeBody.toString().substring(0, 100);
             }
-         }
+        }
         return tradeBody;
     }
 
@@ -137,6 +285,7 @@ public class OrderManagerServiceImpl implements OrderManagerService {
 
     /**
      * 根据用户ID获取订单信息
+     *
      * @param userId
      * @return
      */
@@ -187,6 +336,7 @@ public class OrderManagerServiceImpl implements OrderManagerService {
     /**
      * 解决订单重复提交，采用UUID+时间戳的方式生成流水号
      * 获取订单号，采用UUID+时间戳的方式生成
+     *
      * @return
      */
     private String getTradeNo(String userId) {
@@ -195,7 +345,7 @@ public class OrderManagerServiceImpl implements OrderManagerService {
         tradeNo.append(UUID.randomUUID().toString().replace("-", ""))
                 .append(System.currentTimeMillis());
         // 存储到redis中
-        redisTemplate.opsForValue().set(getTradeNoKey(tradeNo.toString()), tradeNo.toString(),30, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(getTradeNoKey(tradeNo.toString()), tradeNo.toString(), 30, TimeUnit.MINUTES);
         return tradeNo.toString();
     }
 

@@ -17,6 +17,11 @@ public class OrderController {
 
     private final OrderFeignClient orderFeignClient;
 
+    @GetMapping("/myOrder.html")
+    public String myOrder(Model model, HttpServletRequest request){
+        return "order/myOrder";
+    }
+
     @GetMapping("/trade.html")
     public String trade(Model model){
         Result<Map<String, Object>> tradeInfo = orderFeignClient.getTradeInfo();
