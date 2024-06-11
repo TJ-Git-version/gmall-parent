@@ -5,6 +5,8 @@ import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.SkuManagerService;
+import com.atguigu.gmall.rabbit.constant.MqConst;
+import com.atguigu.gmall.rabbit.service.RabbitService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -49,9 +51,12 @@ public class SkuManagerServiceImpl implements SkuManagerService {
     private RedisTemplate<Object, Object> redisTemplate;
     @Autowired
     private RedissonClient redissonClient;
+    @Autowired
+    private RabbitService rabbitService;
 
     /**
      * 获取所有skuId
+     *
      * @return
      */
     @Override
@@ -204,7 +209,7 @@ public class SkuManagerServiceImpl implements SkuManagerService {
                     } finally {
                         lock.unlock();
                     }
-                }else {
+                } else {
                     // 其他线程等待
                     Thread.sleep(1000);
                     return getSkuInfoRedisson(skuId);
@@ -365,6 +370,15 @@ public class SkuManagerServiceImpl implements SkuManagerService {
                 Wrappers.<SkuInfo>lambdaUpdate()
                         .set(SkuInfo::getIsSale, isSale)
                         .eq(SkuInfo::getId, skuId));
+        // 新增sku详情信息到布隆过滤器
+        RBloomFilter<Object> bloomFilter = redissonClient.getBloomFilter(RedisConst.SKU_BLOOM_FILTER);
+        if (isSale == 1) {
+            bloomFilter.add(skuId);
+        }
+        // TODO 移除sku详情信息到布隆过滤器，不做单独删除，每天晚上0点定时任务删除全部sku详情信息，重新初始化布隆过滤器
+
+        // 将消息发送到rabbitmq，更新es商品状态
+        rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_GOODS, isSale == 1 ? MqConst.ROUTING_GOODS_UPPER : MqConst.ROUTING_GOODS_LOWER, skuId);
     }
 
 

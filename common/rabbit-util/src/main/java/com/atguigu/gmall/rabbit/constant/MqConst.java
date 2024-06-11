@@ -9,12 +9,23 @@ public class MqConst {
     /**
      * 商品上下架
      */
-    public static final String EXCHANGE_DIRECT_GOODS = "exchange.direct.goods";
-    public static final String ROUTING_GOODS_UPPER = "goods.upper";
-    public static final String ROUTING_GOODS_LOWER = "goods.lower";
+    public static final String EXCHANGE_DIRECT_GOODS = "exchange.direct.goods"; // 交换机
+    public static final String ROUTING_GOODS_UPPER = "goods.upper"; // 上架路由key
+    public static final String ROUTING_GOODS_LOWER = "goods.lower"; // 下架路由key
     //队列
-    public static final String QUEUE_GOODS_UPPER  = "queue.goods.upper";
-    public static final String QUEUE_GOODS_LOWER  = "queue.goods.lower";
+    public static final String QUEUE_GOODS_UPPER  = "queue.goods.upper"; // 上架队列
+    public static final String QUEUE_GOODS_LOWER  = "queue.goods.lower"; // 下架队列
+
+    /**
+     * 商品上下架：死讯队列
+     */
+    // public static final String DEAD_EXCHANGE_DIRECT_GOODS = "dead.exchange.direct.goods"; // 交换机
+    // public static final String DEAD_ROUTING_GOODS_UPPER = "dead.goods.upper"; // 上架路由key
+    // public static final String DEAD_ROUTING_GOODS_LOWER = "dead.goods.lower"; // 下架路由key
+    // //队列
+    // public static final String DEAD_QUEUE_GOODS_UPPER  = "dead.queue.goods.upper"; // 上架队列
+    // public static final String DEAD_QUEUE_GOODS_LOWER  = "dead.queue.goods.lower"; // 下架队列
+
     /**
      * 取消订单，发送延迟队列
      */

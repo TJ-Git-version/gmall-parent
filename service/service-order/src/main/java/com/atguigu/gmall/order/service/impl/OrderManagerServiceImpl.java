@@ -18,7 +18,6 @@ import com.atguigu.gmall.order.service.OrderManagerService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -213,11 +212,12 @@ public class OrderManagerServiceImpl implements OrderManagerService {
      * 提交订单
      *
      * @param orderInfo
+     * @param tradeNo
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitOrder(OrderInfo orderInfo) {
+    public Long submitOrder(OrderInfo orderInfo, String tradeNo) {
         // 1. 保存订单信息
         List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
         // 计算总金额，必须要存在订单明细信息
@@ -247,7 +247,8 @@ public class OrderManagerServiceImpl implements OrderManagerService {
                 orderDetailMapper.insert(orderDetail);
             });
         }
-
+        // 提交订单成功后，删除订单流水号
+        this.deleteTradeNo(tradeNo);
         // 删除redis中购物车中已结算的商品
         // String cartKey = RedisConst.USER_KEY_PREFIX + orderInfo.getUserId()+ RedisConst.USER_CART_KEY_SUFFIX;
         // redisTemplate.delete(cartKey);

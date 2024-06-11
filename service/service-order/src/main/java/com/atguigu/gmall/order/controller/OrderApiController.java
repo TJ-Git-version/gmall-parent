@@ -54,9 +54,7 @@ public class OrderApiController {
             return Result.fail().message(errorSkuList.get(0));
         }
         orderInfo.setUserId(Long.valueOf(userId));
-        Long orderId = orderManagerService.submitOrder(orderInfo);
-        // 提交订单成功后，删除订单流水号
-        orderManagerService.deleteTradeNo(tradeNo);
+        Long orderId = orderManagerService.submitOrder(orderInfo, tradeNo);
         return Result.ok(orderId);
     }
 

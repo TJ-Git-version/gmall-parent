@@ -2,6 +2,7 @@ package com.atguigu.gmall.list.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.common.execption.GmallException;
 import com.atguigu.gmall.list.repository.SearchRepository;
 import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.*;
@@ -311,8 +312,18 @@ public class SearchServiceImpl implements SearchService {
      * @param skuId
      */
     @Override
-    public void lowerGoods(Long skuId) {
-        searchRepository.deleteById(skuId);
+    public Boolean lowerGoods(Long skuId) {
+        try {
+            RBloomFilter<Object> bloomFilter = redissonClient.getBloomFilter(RedisConst.SKU_BLOOM_FILTER);
+            if (!bloomFilter.contains(skuId)) {
+                return false;
+            }
+            searchRepository.deleteById(skuId);
+            return true;
+        } catch (Exception e) {
+            log.error("商品下架失败，skuId：{} 异常信息：{}", skuId, e);
+            throw new GmallException("商品下架失败，请稍后重试~");
+        }
     }
 
 

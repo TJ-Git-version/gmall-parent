@@ -20,10 +20,12 @@ public interface OrderManagerService {
 
     /**
      * 提交订单
+     *
      * @param orderInfo
+     * @param tradeNo
      * @return
      */
-    Long submitOrder(OrderInfo orderInfo);
+    Long submitOrder(OrderInfo orderInfo, String tradeNo);
 
     /**
      * 校验订单流水号

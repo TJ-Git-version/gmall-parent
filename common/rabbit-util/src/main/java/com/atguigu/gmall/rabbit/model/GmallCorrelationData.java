@@ -2,6 +2,8 @@ package com.atguigu.gmall.rabbit.model;
 
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 
+import java.util.List;
+
 public class GmallCorrelationData extends CorrelationData {
 
     /**

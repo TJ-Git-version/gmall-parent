@@ -17,7 +17,7 @@ public interface SearchService {
      * 商品下架功能
      * @param skuId
      */
-    void lowerGoods(Long skuId);
+    Boolean lowerGoods(Long skuId);
 
     /**
      * 商品热度增加功能

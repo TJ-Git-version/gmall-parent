@@ -14,6 +14,17 @@ import org.springframework.util.StringUtils;
 import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * RabbitMQ消息确认机制配置类
+ * ConfirmCallback：消息发送到交换机后，交换机把消息路由到队列，如果队列消费者接收到消息，则会调用该方法，并传入CorrelationData对象，
+ * 该对象包含了消息的唯一标识id，可以用来标识消息是否到达队列。
+ * <p>
+ * 如果发送失败，生产者进行重试，重试3次后仍然失败，则会调用nack方法，该方法传入CorrelationData对象，
+ * <p>
+ * ReturnCallback：如果消息没有到达队列，则会调用该方法，并传入消息对象、回复码、回复文本、交换机、路由键等信息。
+ * <p>
+ * 该类主要是配置rabbitTemplate的confirmCallback和returnCallback，并实现confirm和return方法。
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -109,14 +120,15 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
             correlationId = (String) message.getMessageProperties().getHeaders().get("spring_returned_message_correlation");
         }
         log.info("message中获取的correlationId：" + correlationId);
+        if (!StringUtils.isEmpty(correlationId)) {
+            // 从redis中获取自定义的GmallCorrelationData对象，里面包含了消息的重试次数
+            String correlationDataJson = (String) redisTemplate.opsForValue().get(correlationId);
+            GmallCorrelationData gmallCorrelationData = JSON.parseObject(correlationDataJson, GmallCorrelationData.class);
+            log.info("从redis中获取的GmallCorrelationData对象：" + gmallCorrelationData);
 
-        // 从redis中获取自定义的GmallCorrelationData对象，里面包含了消息的重试次数
-        String correlationDataJson = (String) redisTemplate.opsForValue().get(correlationId);
-        GmallCorrelationData gmallCorrelationData = JSON.parseObject(correlationDataJson, GmallCorrelationData.class);
-        log.info("从redis中获取的GmallCorrelationData对象：" + gmallCorrelationData);
-
-        // 进行重试
-        this.retrySendMsg(gmallCorrelationData);
+            // 进行重试
+            this.retrySendMsg(gmallCorrelationData);
+        }
     }
     /*
     消息没有到达队列：(
