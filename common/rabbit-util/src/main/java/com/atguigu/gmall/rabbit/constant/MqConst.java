@@ -100,7 +100,7 @@ public class MqConst {
      */
     public static MessagePostProcessor getMessagePostProcessor(int delayTime) {
         return message -> {
-            message.getMessageProperties().setDelay(delayTime);
+            message.getMessageProperties().setDelay(delayTime * 1000); // 设置延迟时间，单位：毫秒
             return message;
         };
     }

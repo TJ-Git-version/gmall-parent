@@ -9,6 +9,7 @@ import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.PaymentWay;
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.user.UserAddress;
@@ -16,9 +17,12 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderManagerService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
+import com.atguigu.gmall.rabbit.constant.MqConst;
+import com.atguigu.gmall.rabbit.service.RabbitService;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +42,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @SuppressWarnings("all")
-public class OrderManagerServiceImpl implements OrderManagerService {
+public class OrderManagerServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> implements OrderManagerService {
 
     @Autowired
     private CartFeignClient cartFeignClient;
@@ -54,6 +58,31 @@ public class OrderManagerServiceImpl implements OrderManagerService {
     private RedisTemplate redisTemplate;
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+    @Autowired
+    private RabbitService rabbitService;
+
+    /**
+     * 修改订单状态：关闭状态
+     */
+    @Override
+    public void cancelOrderStatus(OrderInfo orderInfo) {
+        updateOrderStatus(orderInfo.getId(), ProcessStatus.CLOSED);
+    }
+
+    /**
+     * 根据订单id和订单状态更新订单状态
+     */
+    @Override
+    public void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setId(orderId);
+        // 订单状态
+        orderInfo.setOrderStatus(processStatus.getOrderStatus().name());
+        // 流程状态
+        orderInfo.setProcessStatus(processStatus.name());
+        baseMapper.updateById(orderInfo);
+    }
+
 
     /**
      * 根据用户id获取订单列表
@@ -226,6 +255,8 @@ public class OrderManagerServiceImpl implements OrderManagerService {
         }
         // 订单状态，默认为未支付
         orderInfo.setOrderStatus(OrderStatus.UNPAID.name());
+        // 订单进度状态：未支付
+        orderInfo.setProcessStatus(ProcessStatus.UNPAID.name());
         // 支付方式，默认为线上支付、货到付款
         orderInfo.setPaymentWay(PaymentWay.ONLINE.name());
         // 订单交易编号，第三方支付系统生成的唯一订单号
@@ -249,6 +280,10 @@ public class OrderManagerServiceImpl implements OrderManagerService {
         }
         // 提交订单成功后，删除订单流水号
         this.deleteTradeNo(tradeNo);
+
+        // 将订单发送到rabbbitmq，半小时后如果未支付则修改订单状态为关闭状态
+        rabbitService.sendDelayMsg(MqConst.EXCHANGE_DIRECT_ORDER_CANCEL, MqConst.ROUTING_ORDER_CANCEL, orderInfo.getId(), MqConst.DELAY_TIME);
+
         // 删除redis中购物车中已结算的商品
         // String cartKey = RedisConst.USER_KEY_PREFIX + orderInfo.getUserId()+ RedisConst.USER_CART_KEY_SUFFIX;
         // redisTemplate.delete(cartKey);

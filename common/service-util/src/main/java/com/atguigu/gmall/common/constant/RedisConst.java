@@ -51,5 +51,8 @@ public class RedisConst {
     // 商品详情页缓存key
     public static final String SKU_INFO_KEY_PREFIX = "skuinfo:"; // sku:10001:info
 
-
+    // 延迟队列取消订单前缀
+    // 延迟队列统一前缀
+    public static final String DELAY_QUEUE_PREFIX = "delayQueue:"; // delayqueue:10001:order:10001
+    public static final String ORDER_CANCEL_PREFIX = DELAY_QUEUE_PREFIX + "orderCancel:"; // order:cancel:10001
 }
