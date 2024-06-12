@@ -31,10 +31,11 @@ public class MqProvider {
      */
     @GetMapping("/sendDelayedMsg")
     public Result<Void> sendDelayedMsg() {
-        rabbitTemplate.convertAndSend(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, "测试延迟消息", message -> {
-            message.getMessageProperties().setDelay(5 * 1000);
-            return message;
-        });
+        // rabbitTemplate.convertAndSend(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, "测试延迟消息", message -> {
+        //     message.getMessageProperties().setDelay(5 * 1000);
+        //     return message;
+        // });
+        rabbitService.sendDelayMsg(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, "测试延迟消息", 5 * 1000);
         return Result.ok();
     }
 

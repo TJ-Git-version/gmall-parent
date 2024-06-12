@@ -1,6 +1,7 @@
 package com.atguigu.gmall.rabbit.config;
 
 import com.alibaba.fastjson.JSON;
+import com.atguigu.gmall.rabbit.constant.MqConst;
 import com.atguigu.gmall.rabbit.model.GmallCorrelationData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +74,7 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
      */
     private void retrySendMsg(CorrelationData correlationData) {
         if (correlationData == null) {
-            log.error("消息没有到达队列，未找到CorrelationData对象：{}" + correlationData.getId());
+            log.error("消息没有到达队列，未找到CorrelationData对象");
             return;
         }
         // 将CorrelationData对象转换为GmallCorrelationData对象
@@ -91,8 +92,13 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
             gmallCorrelationData.setRetryCount(retryCount);
             // 更新redis中的自定义的GmallCorrelationData中的重试次数
             redisTemplate.opsForValue().set(correlationData.getId(), JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
-            // 重新发送消息
-            rabbitTemplate.convertAndSend(gmallCorrelationData.getExchange(), gmallCorrelationData.getRoutingKey(), gmallCorrelationData.getMessage(), gmallCorrelationData);
+            if (gmallCorrelationData.isDelay()) {
+                // 延迟发送消息
+                rabbitTemplate.convertAndSend(gmallCorrelationData.getExchange(), gmallCorrelationData.getRoutingKey(), gmallCorrelationData.getMessage(), MqConst.getMessagePostProcessor(gmallCorrelationData.getDelayTime()), gmallCorrelationData);
+            } else {
+                // 立即发送消息
+                rabbitTemplate.convertAndSend(gmallCorrelationData.getExchange(), gmallCorrelationData.getRoutingKey(), gmallCorrelationData.getMessage(), gmallCorrelationData);
+            }
             // 打印日志
             log.error("消息发送到队列失败，进行第{}次重试：{}", retryCount, correlationData.getId());
         }

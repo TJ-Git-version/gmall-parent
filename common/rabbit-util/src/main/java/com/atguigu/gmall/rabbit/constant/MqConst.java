@@ -1,5 +1,7 @@
 package com.atguigu.gmall.rabbit.constant;
 
+import org.springframework.amqp.core.MessagePostProcessor;
+
 public class MqConst {
     /**
      * 消息补偿
@@ -90,5 +92,17 @@ public class MqConst {
     //队列
     public static final String QUEUE_TASK_18  = "queue.task.18";
 
+
+    /**
+     * 获取消息处理器，用于设置延迟时间
+     * @param delayTime
+     * @return
+     */
+    public static MessagePostProcessor getMessagePostProcessor(int delayTime) {
+        return message -> {
+            message.getMessageProperties().setDelay(delayTime);
+            return message;
+        };
+    }
 
 }
