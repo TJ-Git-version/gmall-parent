@@ -23,10 +23,17 @@ public class OrderApiController {
     private final OrderManagerService orderManagerService;
 
     /**
+     * 根据订单id查询订单详情
+     */
+    @GetMapping("inner/getOrderInfo/{orderId}")
+    @ApiOperation("根据订单id查询订单详情")
+    public Result<OrderInfo> getOrderInfoById(@PathVariable("orderId") Long orderId) {
+        return Result.ok(orderManagerService.getOrderInfoById(orderId));
+    }
+    /**
      * 根据用户id获取订单列表
      */
     @GetMapping("auth/{current}/{limit}")
-
     @ApiOperation("根据用户id获取订单列表")
     public Result<IPage<OrderInfo>> getMyOrderByUserId(@PathVariable("current") Integer current, @PathVariable("limit") Integer limit, HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);

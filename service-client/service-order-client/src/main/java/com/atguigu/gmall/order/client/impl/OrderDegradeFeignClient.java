@@ -1,6 +1,7 @@
 package com.atguigu.gmall.order.client.impl;
 
 import com.atguigu.gmall.common.result.Result;
+import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.client.OrderFeignClient;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,11 @@ import java.util.Map;
 public class OrderDegradeFeignClient implements OrderFeignClient {
     @Override
     public Result<Map<String, Object>> getTradeInfo() {
+        return Result.fail();
+    }
+
+    @Override
+    public Result<OrderInfo> getOrderInfoById(Long orderId) {
         return Result.fail();
     }
 }

@@ -21,6 +21,7 @@ import com.atguigu.gmall.rabbit.constant.MqConst;
 import com.atguigu.gmall.rabbit.service.RabbitService;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,25 @@ public class OrderManagerServiceImpl extends ServiceImpl<OrderInfoMapper, OrderI
     @Autowired
     private RabbitService rabbitService;
 
+
+    /**
+     * 根据订单id获取订单详情
+     * @param orderId
+     * @return
+     */
+    @Override
+    public OrderInfo getOrderInfoById(Long orderId) {
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        if (Objects.nonNull(orderInfo)) {
+            orderInfo.setOrderDetailList(orderDetailMapper.selectList(
+                    Wrappers.<OrderDetail>lambdaQuery()
+                            .eq(OrderDetail::getOrderId, orderId))
+            );
+        }
+        return orderInfo;
+    }
+
+
     /**
      * 修改订单状态：关闭状态
      */
@@ -82,7 +102,6 @@ public class OrderManagerServiceImpl extends ServiceImpl<OrderInfoMapper, OrderI
         orderInfo.setProcessStatus(processStatus.name());
         baseMapper.updateById(orderInfo);
     }
-
 
     /**
      * 根据用户id获取订单列表
