@@ -19,9 +19,9 @@ public class PayController {
 
     @GetMapping("/pay.html")
     public String pay(Long orderId, Model model){
-        Result<OrderInfo> result = orderFeignClient.getOrderInfoById(orderId);
-        if (Objects.nonNull(result)) {
-            model.addAttribute("orderInfo", result.getData());
+        OrderInfo orderInfo = orderFeignClient.getOrderInfoById(orderId);
+        if (Objects.nonNull(orderInfo)) {
+            model.addAttribute("orderInfo", orderInfo);
         }
         return "payment/pay";
     }

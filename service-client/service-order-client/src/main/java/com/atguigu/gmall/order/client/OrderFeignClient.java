@@ -25,5 +25,5 @@ public interface OrderFeignClient {
      */
     @GetMapping("/inner/getOrderInfo/{orderId}")
     @ApiOperation("根据订单id查询订单详情")
-    public Result<OrderInfo> getOrderInfoById(@PathVariable("orderId") Long orderId);
+    public OrderInfo getOrderInfoById(@PathVariable("orderId") Long orderId);
 }

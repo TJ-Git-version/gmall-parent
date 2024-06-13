@@ -16,7 +16,7 @@ public class OrderDegradeFeignClient implements OrderFeignClient {
     }
 
     @Override
-    public Result<OrderInfo> getOrderInfoById(Long orderId) {
-        return Result.fail();
+    public OrderInfo getOrderInfoById(Long orderId) {
+        return new OrderInfo();
     }
 }

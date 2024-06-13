@@ -143,7 +143,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      */
     private static Mono<Void> redirectLogin(ServerHttpRequest request, ServerHttpResponse response) {
         // 303状态码表示由于请求对应的资源存在着另一个URI，应使用重定向获取请求的资源
-        response.setStatusCode(HttpStatus.SEE_OTHER);
+        response.setStatusCode(HttpStatus.FOUND);
         // 设置请求头信息，将请求重定向到登录页面
         response.getHeaders().set(HttpHeaders.LOCATION, "http://www.gmall.com/login.html?originUrl=" + request.getURI());
         // 设置响应完成

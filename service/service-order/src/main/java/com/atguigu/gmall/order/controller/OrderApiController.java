@@ -27,8 +27,8 @@ public class OrderApiController {
      */
     @GetMapping("inner/getOrderInfo/{orderId}")
     @ApiOperation("根据订单id查询订单详情")
-    public Result<OrderInfo> getOrderInfoById(@PathVariable("orderId") Long orderId) {
-        return Result.ok(orderManagerService.getOrderInfoById(orderId));
+    public OrderInfo getOrderInfoById(@PathVariable("orderId") Long orderId) {
+        return orderManagerService.getOrderInfoById(orderId);
     }
     /**
      * 根据用户id获取订单列表
