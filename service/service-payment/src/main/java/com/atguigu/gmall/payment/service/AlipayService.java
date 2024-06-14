@@ -7,4 +7,6 @@ public interface AlipayService {
 
     String pay(OrderInfo orderInfo);
 
+    boolean alipayRefund(OrderInfo orderId);
+
 }

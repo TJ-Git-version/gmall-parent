@@ -3,6 +3,9 @@ package com.atguigu.gmall.order.controller;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.common.util.AuthContextHolder;
+import com.atguigu.gmall.model.enums.OrderStatus;
+import com.atguigu.gmall.model.enums.PaymentStatus;
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderManagerService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -21,6 +24,13 @@ import java.util.Map;
 public class OrderApiController {
 
     private final OrderManagerService orderManagerService;
+
+    @GetMapping("/updateOrderStatus")
+    @ApiOperation("更新订单状态")
+    public Result<Void> updateOrderStatus(@RequestParam Long orderId, @RequestParam ProcessStatus processStatus) {
+        orderManagerService.updateOrderStatus(orderId, processStatus);
+        return Result.ok();
+    }
 
     /**
      * 根据订单id查询订单详情

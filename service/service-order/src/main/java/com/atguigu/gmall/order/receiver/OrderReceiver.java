@@ -12,12 +12,16 @@ import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -34,6 +38,40 @@ public class OrderReceiver {
     public static void main(String[] args) {
     }
 
+    /**
+     * 退款订单，关闭订单
+     * @param orderId
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MqConst.QUEUE_ORDER_CANCEL, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_PAYMENT_CLOSE, durable = "true", type = "direct", autoDelete = "false"),
+            key = MqConst.ROUTING_PAYMENT_CLOSE
+    ))
+    public void refundOrder(Long orderId) {
+        orderManagerService.updateOrderStatus(orderId, ProcessStatus.CLOSED);
+    }
+
+    /**
+     * 支付成功后更新订单状态
+     * @param orderMap
+     * @param message
+     * @param channel
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MqConst.QUEUE_PAYMENT_PAY, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_PAYMENT_PAY, durable = "true", type = "direct", autoDelete = "false"),
+            key = MqConst.ROUTING_PAYMENT_PAY
+    ))
+    public void payOrder(Map<String, Object> orderMap, Message message, Channel channel) {
+        System.out.println(orderMap);
+    }
+
+    /**
+     * 取消订单
+     * @param orderId
+     * @param message
+     * @param channel
+     */
     @RabbitListener(queues = MqConst.QUEUE_ORDER_CANCEL)
     public void cancelOrder(Long orderId, Message message, Channel channel) {
         try {

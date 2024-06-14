@@ -118,7 +118,7 @@
 															<div class="typographic"><img :src="detail.imgUrl" style="height: 100px;"/>
 																<a href="#" class="block-text">{{detail.skuName}}</a><span>x{{detail.skuNum }}</span>
 																<ul class="unstyled list-inline">
-																	<li>申请售后</li>
+																	<a class="btn" @click="toRefundPage(order.id)">申请售后 </a>
 																</ul>
 															</div>
 														</td>
@@ -131,7 +131,7 @@
 															</ul>
 														</td>
 														<td :rowspan="order.orderDetailList.length" width="8%" class="center">
-															<a href="#" class="btn">{{order.orderStatusName}} </a>
+															<a class="btn" @click="toPay(order.id)">{{order.orderStatusName}} </a>
 														</td>
 														<td :rowspan="order.orderDetailList.length" width="13%" class="center">
 															<ul class="unstyled">
@@ -382,6 +382,15 @@
             this.fetchData(1)
         },
         methods: {
+			toRefundPage(orderId) {
+				// 新开一个窗口，跳转到支付页面
+				window.open("http://api.gmall.com/api/payment/alipay/refund/" + orderId)
+			},
+			toPay(orderId) {
+				// 新开一个窗口，跳转到支付页面
+				window.open("http://api.gmall.com/api/payment/alipay/submit/" + orderId)
+				// window.location.href = "http://api.gmall.com/api/payment/alipay/submit/" + orderId
+			},
             fetchData(pageNo = 1) {
                 if(pageNo < 1) pageNo = 1
                 if(pageNo >= this.pages) pageNo = this.pages

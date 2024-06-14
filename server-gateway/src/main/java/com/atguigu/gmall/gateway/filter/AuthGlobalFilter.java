@@ -61,6 +61,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
         // 获取请求路径
+
         String path = request.getURI().getPath();
         log.info("获取请求路径: path={}", path);
         // 1、内部接口拒绝直接访问

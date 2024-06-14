@@ -1,12 +1,14 @@
 package com.atguigu.gmall.order.client;
 
 import com.atguigu.gmall.common.result.Result;
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.client.impl.OrderDegradeFeignClient;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -26,4 +28,8 @@ public interface OrderFeignClient {
     @GetMapping("/inner/getOrderInfo/{orderId}")
     @ApiOperation("根据订单id查询订单详情")
     public OrderInfo getOrderInfoById(@PathVariable("orderId") Long orderId);
+
+    @GetMapping("/updateOrderStatus")
+    @ApiOperation("更新订单状态")
+    public Result<Void> updateOrderStatus(@RequestParam Long orderId, @RequestParam ProcessStatus processStatus);
 }
