@@ -8,7 +8,7 @@ spring:
     # characterEncoding：指定字符编码
     # serverTimezone：指定时区，UTC是世界协调时
     # useSSL：false，指定是否使用SSL连接，ssl连接需要配置证书
-    url: jdbc:mysql://192.168.136.132:3306/gmall_order?jdbc:mysql://192.168.136.132:3306/gmall_product?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC&useSSL=false
+    url: jdbc:mysql://192.168.37.132:3306/gmall_order?jdbc:mysql://192.168.37.132:3306/gmall_product?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC&useSSL=false
     username: root
     password: root
     hikari:

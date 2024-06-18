@@ -1,5 +1,5 @@
 nacos:
-  server-addr: 192.168.136.132:8848
+  server-addr: 192.168.37.132:8848
 spring:
   application:
     name: service-list

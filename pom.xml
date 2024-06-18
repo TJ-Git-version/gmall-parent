@@ -22,7 +22,6 @@
         <module>server-gateway</module>
         <module>service-client</module>
         <module>web</module>
-        <module>service-client/service-list-client</module>
         <module>ware-manage</module>
         <module>common/rabbit-util</module>
     </modules>
@@ -124,5 +123,15 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>
