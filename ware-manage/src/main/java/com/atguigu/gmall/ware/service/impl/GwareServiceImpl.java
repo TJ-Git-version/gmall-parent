@@ -189,6 +189,7 @@ public class GwareServiceImpl implements GwareService {
         for (WareOrderTaskDetail detail : details) {
             skulist.add(detail.getSkuId());
         }
+        // 获取仓库中的商品列表信息 // 1 - 33  | 2 - 35 36
         Map<String, List<String>> wareSkuMap = getWareSkuMap(skulist);
         if (wareSkuMap.size() == 1) {
             Map.Entry<String, List<String>> entry = wareSkuMap.entrySet().iterator().next();

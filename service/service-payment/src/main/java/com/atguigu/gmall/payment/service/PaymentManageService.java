@@ -61,6 +61,15 @@ public interface PaymentManageService {
     void updatePaymentStatus(Map<String, String> paramsMap, PaymentInfo paymentInfo, String paymentStatus);
 
     /**
+     * 修改支付信息和订单信息状态
+     * @param paramsMap
+     * @param paymentInfo
+     * @param paymentStatus
+     */
+    void updatePaymentAndOrderStatus(Map<String, String> paramsMap, PaymentInfo paymentInfo, String paymentStatus);
+
+
+    /**
      * 支付宝退款
      *
      * @param orderId

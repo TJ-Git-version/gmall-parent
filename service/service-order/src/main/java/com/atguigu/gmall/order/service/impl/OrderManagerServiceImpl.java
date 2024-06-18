@@ -2,6 +2,7 @@ package com.atguigu.gmall.order.service.impl;
 
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.atguigu.gmall.cart.client.CartFeignClient;
@@ -11,6 +12,7 @@ import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.PaymentWay;
 import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderDetail;
+import com.atguigu.gmall.model.order.OrderDetailVo;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.user.UserAddress;
 import com.atguigu.gmall.order.mapper.OrderDetailMapper;
@@ -65,6 +67,7 @@ public class OrderManagerServiceImpl extends ServiceImpl<OrderInfoMapper, OrderI
 
     /**
      * 根据订单id获取订单详情
+     *
      * @param orderId
      * @return
      */
@@ -78,6 +81,45 @@ public class OrderManagerServiceImpl extends ServiceImpl<OrderInfoMapper, OrderI
             );
         }
         return orderInfo;
+    }
+
+    /**
+     * 减库存
+     *
+     * @param orderInfo
+     */
+    @Override
+    public void sendMqReduceStock(OrderInfo orderInfo) {
+        rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_WARE_STOCK, MqConst.ROUTING_WARE_STOCK, this.initWareDate(orderInfo));
+    }
+
+    /**
+     * 初始化减库存参数
+     *
+     * @param orderInfo
+     * @return
+     */
+    private String initWareDate(OrderInfo orderInfo) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("orderId", orderInfo.getId());
+        map.put("consignee", orderInfo.getConsignee());
+        map.put("consigneeTel", orderInfo.getConsigneeTel());
+        map.put("orderBody", orderInfo.getTradeBody());
+        map.put("deliveryAddress", orderInfo.getDeliveryAddress());
+        map.put("paymentWay", "2");
+        orderInfo = getOrderInfoById(orderInfo.getId());
+        if (Objects.nonNull(orderInfo) && CollectionUtils.isNotEmpty(orderInfo.getOrderDetailList())) {
+            List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+            List<Map<String, Object>> listMap = orderDetailList.stream().map(orderDetail -> {
+                Map<String, Object> detailMap = new HashMap<>();
+                detailMap.put("skuId", orderDetail.getSkuId());
+                detailMap.put("skuNum", orderDetail.getSkuNum());
+                detailMap.put("skuName", orderDetail.getSkuName());
+                return detailMap;
+            }).collect(Collectors.toList());
+            map.put("details", listMap);
+        }
+        return JSON.toJSONString(map);
     }
 
 

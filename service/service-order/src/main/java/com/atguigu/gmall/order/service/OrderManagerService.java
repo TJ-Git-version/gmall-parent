@@ -90,4 +90,10 @@ public interface OrderManagerService extends IService<OrderInfo> {
      */
     OrderInfo getOrderInfoById(Long orderId);
 
+    /**
+     * 减库存
+     * @param orderInfo
+     */
+    void sendMqReduceStock(OrderInfo orderInfo);
+
 }

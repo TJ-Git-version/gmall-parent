@@ -125,13 +125,9 @@ public class PaymentManageServiceImpl implements PaymentManageService {
                         return "failure";
                     if (StringUtils.equals(tradeStatus, "TRADE_SUCCESS") || StringUtils.equals(tradeStatus, "TRADE_FINISHED")) {
                         // 更新支付状态
-                        updatePaymentStatus(paramsMap, paymentInfo, PaymentStatus.PAID.name());
+                        updatePaymentAndOrderStatus(paramsMap, paymentInfo, PaymentStatus.PAID.name());
                         // orderFeignClient.updateOrderStatus(paymentInfo.getOrderId(), ProcessStatus.PAID); 网络延迟，导致订单状态更新失败，不推荐使用
-                        // 更新订单状态，使用mq通知订单服务更新订单状态
-                        Map<String, Object> orderMap = new HashMap<>();
-                        orderMap.put("orderId", paymentInfo.getOrderId());
-                        orderMap.put("processStatus", ProcessStatus.PAID);
-                        rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_PAYMENT_PAY, MqConst.ROUTING_PAYMENT_PAY, orderMap);
+
                         return "success";
                     }
                 } else {
@@ -142,10 +138,20 @@ public class PaymentManageServiceImpl implements PaymentManageService {
                 return "failure";
             }
         } catch (AlipayApiException e) {
+            redisTemplate.delete(paramsMap.get("notify_id"));
             log.error("支付宝支付异步回调异常：{}", e.getMessage());
             throw new GmallException("支付宝支付异步回调异常：" + e.getMessage());
         }
         return "failure";
+    }
+
+    @Override
+    public void updatePaymentAndOrderStatus(Map<String, String> paramsMap, PaymentInfo paymentInfo, String paymentStatus) {
+        // 修改支付信息状态
+        updatePaymentStatus(paramsMap, paymentInfo, paymentStatus);
+        // 修改订单状态
+        // 更新订单状态，使用mq通知订单服务更新订单状态
+        rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_PAYMENT_PAY, MqConst.ROUTING_PAYMENT_PAY, paymentInfo.getOrderId());
     }
 
     private boolean verifyPaymentInformation(String out_trade_no, String total_amount, String app_id, String tradeStatus, PaymentInfo paymentInfo) {
@@ -163,11 +169,17 @@ public class PaymentManageServiceImpl implements PaymentManageService {
      * @param paymentInfo
      */
     public void updatePaymentStatus(Map<String, String> paramsMap, PaymentInfo paymentInfo, String paymentStatus) {
-        paymentInfo.setCallbackTime(new Date());
-        paymentInfo.setTradeNo(paramsMap.get("trade_no"));
-        paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
-        paymentInfo.setPaymentStatus(paymentStatus);
-        paymentInfoMapper.updateById(paymentInfo);
+        try {
+            paymentInfo.setCallbackTime(new Date());
+            paymentInfo.setTradeNo(paramsMap.get("trade_no"));
+            paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
+            paymentInfo.setPaymentStatus(paymentStatus);
+            paymentInfoMapper.updateById(paymentInfo);
+        } catch (Exception e) {
+            // 出现异常释放锁
+            redisTemplate.delete(paramsMap.get("notify_id"));
+            log.info("更新支付状态异常，请联系管理员");
+        }
     }
 
 

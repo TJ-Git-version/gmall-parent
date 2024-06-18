@@ -25,6 +25,13 @@ public class OrderApiController {
 
     private final OrderManagerService orderManagerService;
 
+
+    /**
+     * 更新订单状态
+     * @param orderId
+     * @param processStatus
+     * @return
+     */
     @GetMapping("/updateOrderStatus")
     @ApiOperation("更新订单状态")
     public Result<Void> updateOrderStatus(@RequestParam Long orderId, @RequestParam ProcessStatus processStatus) {
